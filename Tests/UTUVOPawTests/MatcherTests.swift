@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 @testable import UTUVOPaw
 
@@ -59,5 +60,14 @@ final class MatcherTests: XCTestCase {
         XCTAssertEqual(info.bundleID, "com.test.fake")
         XCTAssertEqual(info.name, "Fake")
         try? FileManager.default.removeItem(at: tmp)
+    }
+}
+
+final class FontTests: XCTestCase {
+    func testFredokaRegistersFromBundle() {
+        Paw.registerFonts()
+        XCTAssertTrue(Paw.fontRegistered, "Fonts/Fredoka.ttf missing from resource bundle")
+        XCTAssertTrue(NSFontManager.shared.availableFontFamilies.contains("Fredoka"), "family not visible after registration")
+        XCTAssertNotNil(NSFont(name: "Fredoka-Bold", size: 12) ?? NSFont(name: "Fredoka-Regular", size: 12))
     }
 }

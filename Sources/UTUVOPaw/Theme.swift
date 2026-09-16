@@ -1,3 +1,4 @@
+import CoreText
 import SwiftUI
 
 enum Paw {
@@ -13,6 +14,20 @@ enum Paw {
     static let inkSoft = Color(red: 0x6E/255, green: 0x5A/255, blue: 0x72/255)
     static let dash = Color(red: 0xE5/255, green: 0xB8/255, blue: 0xCB/255)
     static let mint = Color(red: 0x3F/255, green: 0xC3/255, blue: 0xA0/255)
+
+    /// Fredoka (OFL, bundled) — the same face as the website. Falls back to SF Rounded if the
+    /// font failed to register.
+    static var fontRegistered = false
+    static func registerFonts() {
+        guard let dir = Bundle.module.url(forResource: "Fonts", withExtension: nil) else { return }
+        for f in ((try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []) where f.pathExtension == "ttf" {
+            if CTFontManagerRegisterFontsForURL(f as CFURL, .process, nil) { fontRegistered = true }
+        }
+    }
+    static func font(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
+        fontRegistered ? Font.custom("Fredoka", size: size).weight(weight)
+                       : Font.system(size: size, weight: weight, design: .rounded)
+    }
 
     static func image(_ name: String) -> Image {
         if let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Assets"),
@@ -55,7 +70,7 @@ struct PawButtonStyle: ButtonStyle {
     var shadow: Color = Paw.roseDark
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: .heavy, design: .rounded))
+            .font(Paw.font(14, .heavy))
             .textCase(.uppercase)
             .tracking(1)
             .foregroundStyle(.white)
@@ -70,7 +85,7 @@ struct PawButtonStyle: ButtonStyle {
 struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 13, weight: .bold, design: .rounded))
+            .font(Paw.font(13, .bold))
             .foregroundStyle(Paw.inkSoft)
             .padding(.horizontal, 14).padding(.vertical, 8)
             .pawGlass(Capsule(), tint: configuration.isPressed ? Paw.pinkSoft : nil, interactive: true, fallback: Paw.pinkSoft.opacity(0.7))

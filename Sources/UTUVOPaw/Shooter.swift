@@ -96,7 +96,7 @@ struct ShardBurst: View {
                     .opacity(go ? 0 : 1)
             }
             Text("boop!")
-                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .font(Paw.font(18, .heavy))
                 .foregroundStyle(Paw.rose)
                 .shadow(color: .white, radius: 2)
                 .offset(y: go ? -46 : -10)

@@ -43,14 +43,14 @@ struct DropZone: View {
                         .foregroundStyle(model.isDropTargeted ? Paw.rose : Paw.dash))
                 VStack(spacing: 10) {
                     Image(systemName: "pawprint.fill")
-                        .font(.system(size: 34))
+                        .font(.system(size: 52))
                         .foregroundStyle(Paw.rose)
                         .scaleEffect(breathe ? 1.08 : 0.94)
                     Text("Drop apps here")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(Paw.font(22, .bold))
                         .foregroundStyle(Paw.ink)
                     Text("The cat will find every leftover file.")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(Paw.font(13, .semibold))
                         .foregroundStyle(Paw.inkSoft)
                 }
                 .padding(.bottom, 30)
@@ -74,7 +74,7 @@ struct DropZone: View {
                         .help("Without it the cat can list but not remove ~/Library/Containers and similar protected folders.")
                 }
                 if let e = model.errorText {
-                    Text(e).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark)
+                    Text(e).font(Paw.font(12, .semibold)).foregroundStyle(Paw.roseDark)
                 }
             }
             .padding(.bottom, 20)
@@ -91,7 +91,7 @@ struct ScanningView: View {
         VStack(spacing: 14) {
             Paw.image("peek").resizable().scaledToFit().frame(width: 220)
                 .rotationEffect(.degrees(wiggle ? 3 : -3))
-            Text("Sniffing…").font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
+            Text("Sniffing…").font(Paw.font(22, .bold)).foregroundStyle(Paw.ink)
             ProgressView().controlSize(.small)
         }
         .onAppear { withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) { wiggle = true } }
@@ -153,7 +153,7 @@ struct ResultsView: View {
             } else if let e = lastError {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Paw.orange)
-                    Text(e).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark).lineLimit(2)
+                    Text(e).font(Paw.font(12, .semibold)).foregroundStyle(Paw.roseDark).lineLimit(2)
                     Spacer()
                     Button("OK") { withAnimation { lastError = nil } }.buttonStyle(GhostButtonStyle())
                 }
@@ -218,7 +218,7 @@ struct ResultsView: View {
         HStack(spacing: 14) {
             if let icon = model.appIcon { Image(nsImage: icon).resizable().frame(width: 48, height: 48) }
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.app?.name ?? "").font(.system(size: 19, weight: .heavy, design: .rounded)).foregroundStyle(Paw.ink)
+                Text(model.app?.name ?? "").font(Paw.font(19, .heavy)).foregroundStyle(Paw.ink)
                 HStack(spacing: 6) {
                     if let v = model.app?.version { Text("v\(v)") }
                     if let id = model.app?.bundleID { Text(id) }
@@ -227,8 +227,8 @@ struct ResultsView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(model.items.count) things on the desk").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
-                Text(ByteFormat.string(model.totalBytes)).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+                Text("\(model.items.count) things on the desk").font(Paw.font(13, .bold)).foregroundStyle(Paw.ink)
+                Text(ByteFormat.string(model.totalBytes)).font(Paw.font(12, .semibold)).foregroundStyle(Paw.inkSoft)
             }
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
@@ -239,11 +239,11 @@ struct ResultsView: View {
         HStack(spacing: 10) {
             Button("Back") { model.reset() }.buttonStyle(GhostButtonStyle())
             Text("Click a thing to throw. Or…")
-                .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+                .font(Paw.font(12, .semibold)).foregroundStyle(Paw.inkSoft)
             Spacer()
             if let r = model.result, !r.trashed.isEmpty {
                 Text("\(r.trashed.count) bopped · \(ByteFormat.string(r.bytesFreed))")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+                    .font(Paw.font(12, .semibold)).foregroundStyle(Paw.inkSoft)
             }
             Button { bopAll() } label: { Label("Bop All", systemImage: "pawprint.fill") }
                 .buttonStyle(PawButtonStyle())
@@ -274,7 +274,7 @@ struct Tile: View {
             }
             .frame(height: 64)
             Text(item.url.lastPathComponent)
-                .font(.system(size: 11, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
+                .font(Paw.font(11, .bold)).foregroundStyle(Paw.ink)
                 .lineLimit(2).multilineTextAlignment(.center).truncationMode(.middle)
                 .frame(height: 28, alignment: .top)
             HStack(spacing: 4) {
@@ -282,9 +282,9 @@ struct Tile: View {
                 Text("·")
                 Text(ByteFormat.string(item.size)).monospacedDigit()
             }
-            .font(.system(size: 9.5, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+            .font(Paw.font(9.5, .semibold)).foregroundStyle(Paw.inkSoft)
             if item.needsAdmin {
-                Text("admin").font(.system(size: 9, weight: .heavy, design: .rounded)).foregroundStyle(.white)
+                Text("admin").font(Paw.font(9, .heavy)).foregroundStyle(.white)
                     .padding(.horizontal, 6).padding(.vertical, 2).background(Paw.orange, in: Capsule())
             }
         }
@@ -306,9 +306,9 @@ struct FullDiskAccessBanner: View {
             Image(systemName: "lock.shield.fill").font(.system(size: 18)).foregroundStyle(Paw.orange)
             VStack(alignment: .leading, spacing: 2) {
                 Text("The cat can't reach ~/Library/Containers yet.")
-                    .font(.system(size: 12.5, weight: .heavy, design: .rounded)).foregroundStyle(Paw.ink)
+                    .font(Paw.font(12.5, .heavy)).foregroundStyle(Paw.ink)
                 Text("Open Full Disk Access, press +, pick UTUVO Paw (or drag it in), turn it on, then relaunch.")
-                    .font(.system(size: 11.5, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+                    .font(Paw.font(11.5, .semibold)).foregroundStyle(Paw.inkSoft)
             }
             Spacer()
             Button("Open Full Disk Access") { Trasher.openFullDiskAccessSettings() }.buttonStyle(GhostButtonStyle())
@@ -331,19 +331,19 @@ struct DoneView: View {
             Paw.image("push").resizable().scaledToFit().frame(width: 300)
                 .scaleEffect(pop ? 1 : 0.7)
             Text("boop!")
-                .font(.system(size: 44, weight: .heavy, design: .rounded))
+                .font(Paw.font(44, .heavy))
                 .foregroundStyle(Paw.rose)
                 .rotationEffect(.degrees(pop ? 4 : -10))
             if let r = model.result {
                 Text("\(r.trashed.count) things off the desk · \(ByteFormat.string(r.bytesFreed)) moved to Trash")
-                    .font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
+                    .font(Paw.font(14, .bold)).foregroundStyle(Paw.ink)
                 if !r.failed.isEmpty {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach(r.failed, id: \.0.id) { f in
                             Text("Couldn't bop \(f.0.url.lastPathComponent): \(f.1.localizedDescription)")
                         }
                     }
-                    .font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark)
+                    .font(Paw.font(11, .semibold)).foregroundStyle(Paw.roseDark)
                     .padding(.horizontal, 30)
                 }
             }
