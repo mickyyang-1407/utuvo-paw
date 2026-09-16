@@ -8,7 +8,7 @@ let package = Package(
         .executableTarget(
             name: "UTUVOPaw",
             path: "Sources/UTUVOPaw",
-            resources: [.copy("Assets"), .copy("Fonts")],
+            resources: [.copy("Assets"), .copy("Fonts"), .copy("Sounds")],
             swiftSettings: [.swiftLanguageMode(.v5)],
             linkerSettings: [
                 .linkedFramework("AppKit"),

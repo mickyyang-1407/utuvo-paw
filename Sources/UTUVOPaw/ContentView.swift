@@ -184,6 +184,7 @@ struct ResultsView: View {
         // 2. throw from the raised paw
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.26) {
             throwPhase = .release
+            Paw.play("whoosh")
             shots.append(Shot(target: item.url, from: AimingCat.pawOrigin(in: deskSize), to: CGPoint(x: f.midX, y: f.midY)))
         }
         // 3. keep spinning the same way until the cat faces the viewer again, then follow the mouse
@@ -200,7 +201,7 @@ struct ResultsView: View {
         shots.removeAll { $0.id == shot.id }
         guard !hits.contains(shot.target) else { return }
         hits.insert(shot.target)
-        NSSound(named: "Pop")?.play()
+        Paw.play("meow")
         model.bop(url: shot.target) { failure in
             withAnimation(.easeIn(duration: 0.25)) { _ = hits.remove(shot.target) }
             if let failure {
