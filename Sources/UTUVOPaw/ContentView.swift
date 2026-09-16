@@ -107,6 +107,7 @@ struct ResultsView: View {
     @State private var shots: [Shot] = []
     @State private var hits: Set<URL> = []
     @State private var throwPhase: ThrowPhase = .idle
+    @State private var catTurn: Double = 0
     @State private var aimOverride: CGFloat?
     @State private var deskSize: CGSize = .zero
     @State private var lastError: String?
@@ -133,7 +134,7 @@ struct ResultsView: View {
                         }
                         .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 170)
                     }
-                    AimingCat(aim: aimOverride ?? aimValue(in: geo.size), phase: throwPhase)
+                    AimingCat(aim: aimOverride ?? aimValue(in: geo.size), phase: throwPhase, turn: catTurn)
                         .offset(y: 24)
                         .allowsHitTesting(false)
                     ForEach(shots) { shot in
@@ -179,14 +180,18 @@ struct ResultsView: View {
         aimOverride = targetAim
         // 1. spin round to face the desk (back to the viewer)
         throwPhase = .turning
+        catTurn += 180
         // 2. throw from the raised paw
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.26) {
             throwPhase = .release
             shots.append(Shot(target: item.url, from: AimingCat.pawOrigin(in: deskSize), to: CGPoint(x: f.midX, y: f.midY)))
         }
-        // 3. spin back to face the viewer, then follow the mouse again
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) { throwPhase = .returning }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.66) {
+        // 3. keep spinning the same way until the cat faces the viewer again, then follow the mouse
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.44) {
+            throwPhase = .returning
+            catTurn += 180
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.72) {
             if throwPhase == .returning { throwPhase = .idle; aimOverride = nil }
         }
     }

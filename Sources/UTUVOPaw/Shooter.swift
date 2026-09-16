@@ -112,24 +112,37 @@ struct ShardBurst: View {
 
 enum ThrowPhase { case idle, turning, release, returning }
 
-/// The cat faces you while idle. To throw it spins round (Y-axis flip), shows its back to you,
-/// throws at the desk, and spins back. `ninja-back` is the back-view art; until it exists the
-/// front art is mirrored as a stand-in.
+/// A card that flips about the Y axis. Because it is Animatable, `angle` is interpolated per
+/// frame, so the face swaps exactly at 90° / 270° with no cross-fade.
+struct FlipCard<Front: View, Back: View>: View, Animatable {
+    var angle: Double
+    let front: Front
+    let back: Back
+    var animatableData: Double { get { angle } set { angle = newValue } }
+
+    var showsFront: Bool {
+        let a = angle.truncatingRemainder(dividingBy: 360)
+        let n = a < 0 ? a + 360 : a
+        return n < 90 || n > 270
+    }
+    var body: some View {
+        ZStack {
+            front.opacity(showsFront ? 1 : 0)
+            back.scaleEffect(x: -1).opacity(showsFront ? 0 : 1)   // un-mirror the back face
+        }
+        .transaction { $0.animation = nil }   // the face swap is a hard cut, never a fade
+        .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.35)
+    }
+}
+
+/// The cat faces you while idle. To throw it spins round, shows its back, throws at the desk,
+/// and spins on round to face you again. `turn` only ever grows (360° per throw) so it never
+/// has to snap back.
 struct AimingCat: View {
     var aim: CGFloat          // -1…1 where the cat is looking
     var phase: ThrowPhase
+    var turn: Double          // cumulative degrees
 
-    static var hasBackArt: Bool { Bundle.module.url(forResource: "ninja-back", withExtension: "png", subdirectory: "Assets") != nil }
-
-    var turn: Double {
-        switch phase {
-        case .idle: return 0
-        case .turning: return 180
-        case .release: return 180
-        case .returning: return 360
-        }
-    }
-    var showingBack: Bool { phase == .turning || phase == .release }
     var lean: Double {
         switch phase {
         case .idle: return Double(aim) * 10
@@ -147,27 +160,16 @@ struct AimingCat: View {
     }
 
     var body: some View {
-        ZStack {
-            Paw.image("ninja").resizable().scaledToFit()
-                .opacity(showingBack ? 0 : 1)
-            Group {
-                if Self.hasBackArt {
-                    Paw.image("ninja-back").resizable().scaledToFit()
-                } else {
-                    Paw.image("ninja").resizable().scaledToFit().scaleEffect(x: -1).saturation(0.85).brightness(-0.05)
-                }
-            }
-            .scaleEffect(x: -1)              // the flip below mirrors it back; this keeps the art upright
-            .opacity(showingBack ? 1 : 0)
-        }
+        FlipCard(angle: turn,
+                 front: Paw.image("ninja").resizable().scaledToFit(),
+                 back: Paw.image("ninja-back").resizable().scaledToFit())
         .frame(width: 190)
         .scaleEffect(x: squash.width, y: squash.height, anchor: .bottom)
-        .rotation3DEffect(.degrees(turn), axis: (x: 0, y: 1, z: 0), perspective: 0.35)
         .rotationEffect(.degrees(lean), anchor: .bottom)
         .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
         .animation(.spring(duration: 0.25), value: aim)
-        // 360° == 0°, so the hop back to idle must be instant or the cat would unspin.
-        .animation(phase == .idle ? nil : (phase == .release ? .spring(duration: 0.12, bounce: 0.6) : .easeInOut(duration: 0.22)), value: phase)
+        .animation(phase == .release ? .spring(duration: 0.12, bounce: 0.6) : .easeInOut(duration: 0.22), value: phase)
+        .animation(.easeInOut(duration: 0.24), value: turn)
     }
 
     /// Where the throwing paw is, in the desk's coordinate space, when the cat shows its back.
