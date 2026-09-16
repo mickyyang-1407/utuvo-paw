@@ -201,7 +201,7 @@ struct ResultsView: View {
         shots.removeAll { $0.id == shot.id }
         guard !hits.contains(shot.target) else { return }
         hits.insert(shot.target)
-        Paw.play("meow")
+        Paw.play("hit")
         model.bop(url: shot.target) { failure in
             withAnimation(.easeIn(duration: 0.25)) { _ = hits.remove(shot.target) }
             if let failure {

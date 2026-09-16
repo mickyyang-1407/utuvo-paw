@@ -41,7 +41,7 @@ enum Paw {
                        : Font.system(size: size, weight: .medium, design: .rounded)
     }
 
-    /// Bundled WAVs (Sounds/whoosh.wav, Sounds/meow.wav). Drop a replacement with the same name to change it.
+    /// Bundled WAVs (Sounds/whoosh.wav, Sounds/hit.wav). Drop a replacement with the same name to change it.
     private static var soundCache: [String: NSSound] = [:]
     static func play(_ name: String) {
         if let s = soundCache[name] { s.stop(); s.play(); return }
