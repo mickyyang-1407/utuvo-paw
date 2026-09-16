@@ -24,9 +24,21 @@ enum Paw {
             if CTFontManagerRegisterFontsForURL(f as CFURL, .process, nil) { fontRegistered = true }
         }
     }
+    /// Body text: Nunito, one weight lighter than asked — Micky finds bold text tiring.
     static func font(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
-        fontRegistered ? Font.custom("Fredoka", size: size).weight(weight)
-                       : Font.system(size: size, weight: weight, design: .rounded)
+        let softened: Font.Weight = switch weight {
+            case .black, .heavy: .bold
+            case .bold: .semibold
+            case .semibold: .medium
+            default: .regular
+        }
+        return fontRegistered ? Font.custom("Nunito", size: size).weight(softened)
+                              : Font.system(size: size, weight: softened, design: .rounded)
+    }
+    /// Display text (titles, "boop!"): Fredoka Medium — round, never bold.
+    static func display(_ size: CGFloat) -> Font {
+        fontRegistered ? Font.custom("Fredoka", size: size).weight(.medium)
+                       : Font.system(size: size, weight: .medium, design: .rounded)
     }
 
     static func image(_ name: String) -> Image {

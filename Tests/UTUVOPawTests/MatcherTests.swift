@@ -68,6 +68,6 @@ final class FontTests: XCTestCase {
         Paw.registerFonts()
         XCTAssertTrue(Paw.fontRegistered, "Fonts/Fredoka.ttf missing from resource bundle")
         XCTAssertTrue(NSFontManager.shared.availableFontFamilies.contains("Fredoka"), "family not visible after registration")
-        XCTAssertNotNil(NSFont(name: "Fredoka-Bold", size: 12) ?? NSFont(name: "Fredoka-Regular", size: 12))
+        XCTAssertTrue(NSFontManager.shared.availableFontFamilies.contains("Nunito"), "Nunito not registered")
     }
 }

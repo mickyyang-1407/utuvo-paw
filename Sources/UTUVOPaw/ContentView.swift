@@ -47,7 +47,7 @@ struct DropZone: View {
                         .foregroundStyle(Paw.rose)
                         .scaleEffect(breathe ? 1.08 : 0.94)
                     Text("Drop apps here")
-                        .font(Paw.font(22, .bold))
+                        .font(Paw.display(24))
                         .foregroundStyle(Paw.ink)
                     Text("The cat will find every leftover file.")
                         .font(Paw.font(13, .semibold))
@@ -91,7 +91,7 @@ struct ScanningView: View {
         VStack(spacing: 14) {
             Paw.image("peek").resizable().scaledToFit().frame(width: 220)
                 .rotationEffect(.degrees(wiggle ? 3 : -3))
-            Text("Sniffing…").font(Paw.font(22, .bold)).foregroundStyle(Paw.ink)
+            Text("Sniffing…").font(Paw.display(24)).foregroundStyle(Paw.ink)
             ProgressView().controlSize(.small)
         }
         .onAppear { withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) { wiggle = true } }
@@ -223,7 +223,7 @@ struct ResultsView: View {
         HStack(spacing: 14) {
             if let icon = model.appIcon { Image(nsImage: icon).resizable().frame(width: 48, height: 48) }
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.app?.name ?? "").font(Paw.font(19, .heavy)).foregroundStyle(Paw.ink)
+                Text(model.app?.name ?? "").font(Paw.display(21)).foregroundStyle(Paw.ink)
                 HStack(spacing: 6) {
                     if let v = model.app?.version { Text("v\(v)") }
                     if let id = model.app?.bundleID { Text(id) }
@@ -336,7 +336,7 @@ struct DoneView: View {
             Paw.image("push").resizable().scaledToFit().frame(width: 300)
                 .scaleEffect(pop ? 1 : 0.7)
             Text("boop!")
-                .font(Paw.font(44, .heavy))
+                .font(Paw.display(48))
                 .foregroundStyle(Paw.rose)
                 .rotationEffect(.degrees(pop ? 4 : -10))
             if let r = model.result {
