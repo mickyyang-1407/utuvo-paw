@@ -65,6 +65,13 @@ struct DropZone: View {
 
             HStack(spacing: 12) {
                 Button("Choose app…") { model.chooseApp() }.buttonStyle(GhostButtonStyle())
+                if !Trasher.hasFullDiskAccess {
+                    Button {
+                        Trasher.openFullDiskAccessSettings()
+                    } label: { Label("Full Disk Access is off — needed for Containers", systemImage: "lock.shield") }
+                        .buttonStyle(GhostButtonStyle())
+                        .help("Without it the cat can list but not remove ~/Library/Containers and similar protected folders.")
+                }
                 if let e = model.errorText {
                     Text(e).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark)
                 }
@@ -140,7 +147,9 @@ struct ResultsView: View {
                 }
                 .background(Paw.cream.opacity(0.35))
             }
-            if let e = lastError {
+            if model.needsFullDiskAccess {
+                FullDiskAccessBanner()
+            } else if let e = lastError {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Paw.orange)
                     Text(e).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark).lineLimit(2)
@@ -279,6 +288,26 @@ struct Tile: View {
         .onHover { hover = $0 }
         .help(item.displayPath + (item.needsAdmin ? "\nLives in /Library — remove by hand with admin rights." : "\nClick to throw a shuriken at it."))
         .contextMenu { Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } }
+    }
+}
+
+struct FullDiskAccessBanner: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "lock.shield.fill").font(.system(size: 18)).foregroundStyle(Paw.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("The cat can't reach ~/Library/Containers yet.")
+                    .font(.system(size: 12.5, weight: .heavy, design: .rounded)).foregroundStyle(Paw.ink)
+                Text("Open Full Disk Access, press +, pick UTUVO Paw (or drag it in), turn it on, then relaunch.")
+                    .font(.system(size: 11.5, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
+            }
+            Spacer()
+            Button("Open Full Disk Access") { Trasher.openFullDiskAccessSettings() }.buttonStyle(GhostButtonStyle())
+            Button("Relaunch") { Trasher.relaunch() }.buttonStyle(PawButtonStyle(color: Paw.orange, shadow: Color(red: 0.80, green: 0.48, blue: 0.20)))
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(Paw.pinkSoft)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
 

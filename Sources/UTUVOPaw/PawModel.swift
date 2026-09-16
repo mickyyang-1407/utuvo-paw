@@ -17,6 +17,7 @@ final class PawModel: ObservableObject {
     @Published var result: BopResult?
     @Published var errorText: String?
     @Published var isDropTargeted = false
+    @Published var needsFullDiskAccess = false
 
     private let scanner = LeftoverScanner()
 
@@ -68,6 +69,7 @@ final class PawModel: ObservableObject {
                 acc.trashed += r.trashed; acc.trashedTo += r.trashedTo; acc.failed += r.failed
                 self.result = acc
                 if r.failed.isEmpty { self.items.removeAll { $0.url == url } }
+                if r.failed.contains(where: { $0.1 is Trasher.NeedsFullDiskAccess }) { self.needsFullDiskAccess = true }
                 done(r.failed.first.map { "Couldn't bop \($0.0.url.lastPathComponent): \($0.1.localizedDescription)" })
                 if self.items.allSatisfy(\.needsAdmin) && !self.items.isEmpty || self.items.isEmpty {
                     self.phase = .done

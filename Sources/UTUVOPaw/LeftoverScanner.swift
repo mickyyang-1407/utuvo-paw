@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// Finds the files an app leaves behind. Pure matching lives in `Matcher` so it can be tested
@@ -127,6 +128,37 @@ final class LeftoverScanner {
 
 /// Moves things to the Trash. Never deletes permanently.
 enum Trasher {
+    struct NeedsFullDiskAccess: LocalizedError {
+        let url: URL
+        var errorDescription: String? { "\(url.lastPathComponent) lives in a protected folder. Give UTUVO Paw Full Disk Access, then relaunch." }
+    }
+
+    /// TCC.db is unreadable without Full Disk Access; that is the standard probe.
+    static var hasFullDiskAccess: Bool {
+        let probe = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/com.apple.TCC/TCC.db")
+        return FileHandle(forReadingAtPath: probe.path) != nil
+    }
+
+    /// Folders where a plain EPERM means "no Full Disk Access" rather than "wrong owner".
+    static func isTCCProtected(_ url: URL) -> Bool {
+        let lib = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library").path
+        return ["Containers", "Group Containers", "Cookies", "HTTPStorages", "Safari", "Mail", "Messages"]
+            .contains { url.path.hasPrefix(lib + "/" + $0 + "/") }
+    }
+
+    static func openFullDiskAccessSettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+    }
+
+    static func relaunch() {
+        let url = Bundle.main.bundleURL
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        task.arguments = ["-n", url.path]
+        try? task.run()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { NSApp.terminate(nil) }
+    }
+
     static func bop(_ items: [Leftover]) -> BopResult {
         var result = BopResult()
         let fm = FileManager.default
@@ -142,6 +174,11 @@ enum Trasher {
                 result.trashed.append(item)
                 if let dest { result.trashedTo.append(dest as URL) }
             } catch {
+                if isTCCProtected(item.url) && !hasFullDiskAccess {
+                    NSLog("UTUVO Paw: %@ is TCC-protected and we lack Full Disk Access", item.url.path)
+                    result.failed.append((item, NeedsFullDiskAccess(url: item.url)))
+                    continue
+                }
                 // Root-owned apps (App Store installs) and TCC-protected folders such as
                 // ~/Library/Containers refuse FileManager. Finder has the rights: it asks for an
                 // admin password when needed. First use prompts once for Automation access.

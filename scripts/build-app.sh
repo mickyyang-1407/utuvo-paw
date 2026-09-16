@@ -21,5 +21,14 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
-codesign --force --deep --sign - "$APP"
-codesign --verify --strict "$APP" && echo "✅ $APP"
+# Sign with Developer ID when available (TCC grants such as Full Disk Access are tied to the
+# code identity; an ad-hoc signature changes every build and drops them). Override: SIGN_ID=-
+SIGN_ID="${SIGN_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"')}"
+SIGN_ID="${SIGN_ID:--}"
+if [[ "$SIGN_ID" == "-" ]]; then
+    codesign --force --deep --sign - "$APP"
+else
+    codesign --force --deep --options runtime --timestamp \
+        --entitlements Resources/UTUVOPaw.entitlements --sign "$SIGN_ID" "$APP"
+fi
+codesign --verify --strict "$APP" && echo "✅ $APP  (signed: $SIGN_ID)"
