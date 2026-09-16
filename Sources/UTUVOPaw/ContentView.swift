@@ -151,7 +151,7 @@ struct ResultsView: View {
         return max(-1, min(1, (mouse.x - size.width / 2) / (size.width / 2)))
     }
 
-    func catMouth(in size: CGSize) -> CGPoint { CGPoint(x: size.width / 2 + 40, y: size.height - 110) }
+    func catMouth(in size: CGSize) -> CGPoint { CGPoint(x: size.width / 2 - 70, y: size.height - 170) }
 
     func shoot(_ item: Leftover) {
         guard !item.needsAdmin, !hits.contains(item.url), let f = frames[item.url] else { return }

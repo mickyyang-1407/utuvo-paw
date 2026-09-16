@@ -23,20 +23,11 @@ struct ShurikenShape: Shape {
 }
 
 struct ShurikenView: View {
-    var size: CGFloat = 46
+    var size: CGFloat = 52
     var body: some View {
-        ZStack {
-            ShurikenShape().fill(LinearGradient(colors: [Color(red: 1, green: 0.72, blue: 0.80), Paw.rose], startPoint: .top, endPoint: .bottom))
-            ShurikenShape().stroke(Paw.roseDark, lineWidth: 1.5)
-            // paw pad
-            Circle().fill(Paw.roseDark).frame(width: size * 0.26)
-            ForEach(0..<4, id: \.self) { i in
-                Circle().fill(Paw.roseDark).frame(width: size * 0.09)
-                    .offset(x: cos(Double(i) * .pi / 2 + .pi / 4) * size * 0.2, y: sin(Double(i) * .pi / 2 + .pi / 4) * size * 0.2)
-            }
-        }
-        .frame(width: size, height: size)
-        .shadow(color: Paw.roseDark.opacity(0.5), radius: 4, y: 2)
+        Paw.image("shuriken").resizable().scaledToFit()
+            .frame(width: size, height: size)
+            .shadow(color: Paw.roseDark.opacity(0.45), radius: 4, y: 2)
     }
 }
 
@@ -124,18 +115,13 @@ struct AimingCat: View {
     var aim: CGFloat
     var throwing: Bool
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            Paw.image("hero").resizable().scaledToFit()
-                .frame(width: 150)
-                .rotationEffect(.degrees(Double(aim) * 10), anchor: .bottom)
-            Paw.image("paw").resizable().scaledToFit()
-                .frame(width: 70)
-                .rotationEffect(.degrees(throwing ? -80 : -30 + Double(aim) * 25), anchor: .bottomTrailing)
-                .offset(x: 26, y: 20)
-                .animation(.spring(duration: 0.18, bounce: 0.4), value: throwing)
-        }
-        .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
-        .animation(.spring(duration: 0.25), value: aim)
+        Paw.image("ninja").resizable().scaledToFit()
+            .frame(width: 190)
+            .rotationEffect(.degrees(Double(aim) * 12 + (throwing ? -14 : 0)), anchor: .bottom)
+            .scaleEffect(x: throwing ? 1.06 : 1, y: throwing ? 0.94 : 1, anchor: .bottom)
+            .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
+            .animation(.spring(duration: 0.25), value: aim)
+            .animation(.spring(duration: 0.16, bounce: 0.5), value: throwing)
     }
 }
 
