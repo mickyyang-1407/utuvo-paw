@@ -7,7 +7,6 @@ final class PawModel: ObservableObject {
         case idle
         case scanning
         case results
-        case bopping
         case done
     }
 
@@ -58,18 +57,21 @@ final class PawModel: ObservableObject {
         for i in items.indices where !items[i].needsAdmin { items[i].selected = on }
     }
 
-    func bop() {
-        let targets = selectedItems
-        guard !targets.isEmpty else { return }
-        phase = .bopping
+    /// Trash one thing (after the shuriken lands). `done` runs on the main actor when it is gone.
+    func bop(url: URL, done: @escaping () -> Void) {
+        guard let item = items.first(where: { $0.url == url }) else { return }
         Task.detached(priority: .userInitiated) {
-            let r = Trasher.bop(targets)
-            try? await Task.sleep(for: .milliseconds(1100)) // let the paw finish its swipe
+            let r = Trasher.bop([item])
+            try? await Task.sleep(for: .milliseconds(450)) // let the shards fly
             await MainActor.run {
-                self.result = r
-                self.items.removeAll { l in r.trashed.contains(where: { $0.url == l.url }) }
-                self.phase = .done
-                NSSound(named: "Pop")?.play()
+                var acc = self.result ?? BopResult()
+                acc.trashed += r.trashed; acc.trashedTo += r.trashedTo; acc.failed += r.failed
+                self.result = acc
+                if r.failed.isEmpty { self.items.removeAll { $0.url == url } }
+                done()
+                if self.items.allSatisfy(\.needsAdmin) && !self.items.isEmpty || self.items.isEmpty {
+                    self.phase = .done
+                }
             }
         }
     }

@@ -10,7 +10,7 @@ struct ContentView: View {
             switch model.phase {
             case .idle: DropZone()
             case .scanning: ScanningView()
-            case .results, .bopping: ResultsView()
+            case .results: ResultsView()
             case .done: DoneView()
             }
         }
@@ -90,63 +90,101 @@ struct ScanningView: View {
     }
 }
 
-// MARK: - Results
+// MARK: - Results: the desk. Aim with the mouse, click a thing to throw a shuriken at it.
 
 struct ResultsView: View {
     @EnvironmentObject var model: PawModel
-    @State private var pawX: CGFloat = 1.4   // fraction of width; >1 = off-screen right
+    @State private var frames: [URL: CGRect] = [:]
+    @State private var mouse: CGPoint = .zero
+    @State private var shots: [Shot] = []
+    @State private var hits: Set<URL> = []
+    @State private var throwing = false
+    @State private var deskSize: CGSize = .zero
 
-    var grouped: [(Leftover.Category, [Leftover])] {
-        Dictionary(grouping: model.items, by: \.category).sorted { $0.key < $1.key }
-    }
+    struct Shot: Identifiable { let id = UUID(); let target: URL; let from: CGPoint; let to: CGPoint }
+
+    let columns = [GridItem(.adaptive(minimum: 104, maximum: 124), spacing: 10)]
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                header
-                Divider().overlay(Paw.dash)
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 6, pinnedViews: []) {
-                        ForEach(grouped, id: \.0) { cat, items in
-                            Text(cat.rawValue.uppercased())
-                                .font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.2)
-                                .foregroundStyle(Paw.inkSoft)
-                                .padding(.top, 12).padding(.horizontal, 20)
-                            ForEach(items) { item in LeftoverRow(item: item) }
+        VStack(spacing: 0) {
+            header
+            Divider().overlay(Paw.dash)
+            GeometryReader { geo in
+                ZStack(alignment: .bottom) {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(model.items) { item in
+                                Tile(item: item, hit: hits.contains(item.url))
+                                    .background(GeometryReader { g in
+                                        Color.clear.preference(key: TileFrameKey.self, value: [item.url: g.frame(in: .named("desk"))])
+                                    })
+                                    .onTapGesture { shoot(item) }
+                            }
                         }
+                        .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 170)
                     }
-                    .padding(.bottom, 16)
+                    AimingCat(aim: aimValue(in: geo.size), throwing: throwing)
+                        .offset(y: 24)
+                        .allowsHitTesting(false)
+                    ForEach(shots) { shot in
+                        ShotView(from: shot.from, to: shot.to) { land(shot) }
+                    }
                 }
-                Divider().overlay(Paw.dash)
-                footer
-            }
-            .disabled(model.phase == .bopping)
-
-            if model.phase == .bopping {
-                GeometryReader { geo in
-                    Paw.image("paw").resizable().scaledToFit()
-                        .frame(width: 260)
-                        .rotationEffect(.degrees(-25))
-                        .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
-                        .position(x: geo.size.width * pawX, y: geo.size.height * 0.5)
-                        .onAppear {
-                            pawX = 1.4
-                            withAnimation(.easeOut(duration: 0.45)) { pawX = 0.35 }
-                            withAnimation(.easeIn(duration: 0.4).delay(0.55)) { pawX = -0.6 }
-                        }
+                .coordinateSpace(name: "desk")
+                .onPreferenceChange(TileFrameKey.self) { frames = $0 }
+                .onAppear { deskSize = geo.size }
+                .onChange(of: geo.size) { _, new in deskSize = new }
+                .onContinuousHover { phase in
+                    if case .active(let p) = phase { mouse = p }
                 }
-                .allowsHitTesting(false)
+                .background(Paw.cream.opacity(0.35))
             }
+            Divider().overlay(Paw.dash)
+            footer
         }
     }
 
+    // MARK: aiming & throwing
+
+    func aimValue(in size: CGSize) -> CGFloat {
+        guard size.width > 0 else { return 0 }
+        return max(-1, min(1, (mouse.x - size.width / 2) / (size.width / 2)))
+    }
+
+    func catMouth(in size: CGSize) -> CGPoint { CGPoint(x: size.width / 2 + 40, y: size.height - 110) }
+
+    func shoot(_ item: Leftover) {
+        guard !item.needsAdmin, !hits.contains(item.url), let f = frames[item.url] else { return }
+        let from = catMouth(in: deskSize)
+        throwing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { throwing = false }
+        shots.append(Shot(target: item.url, from: from, to: CGPoint(x: f.midX, y: f.midY)))
+    }
+
+    func land(_ shot: Shot) {
+        shots.removeAll { $0.id == shot.id }
+        guard !hits.contains(shot.target) else { return }
+        hits.insert(shot.target)
+        NSSound(named: "Pop")?.play()
+        model.bop(url: shot.target) {
+            withAnimation(.easeIn(duration: 0.25)) { _ = hits.remove(shot.target) }
+        }
+    }
+
+    func bopAll() {
+        let targets = model.items.filter { !$0.needsAdmin && !hits.contains($0.url) }
+        for (i, item) in targets.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.22) { shoot(item) }
+        }
+    }
+
+    // MARK: chrome
+
     var header: some View {
         HStack(spacing: 14) {
-            if let icon = model.appIcon {
-                Image(nsImage: icon).resizable().frame(width: 56, height: 56)
-            }
+            if let icon = model.appIcon { Image(nsImage: icon).resizable().frame(width: 48, height: 48) }
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.app?.name ?? "").font(.system(size: 20, weight: .heavy, design: .rounded)).foregroundStyle(Paw.ink)
+                Text(model.app?.name ?? "").font(.system(size: 19, weight: .heavy, design: .rounded)).foregroundStyle(Paw.ink)
                 HStack(spacing: 6) {
                     if let v = model.app?.version { Text("v\(v)") }
                     if let id = model.app?.bundleID { Text(id) }
@@ -155,68 +193,76 @@ struct ResultsView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(model.items.count) things found").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
+                Text("\(model.items.count) things on the desk").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
                 Text(ByteFormat.string(model.totalBytes)).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
             }
         }
-        .padding(.horizontal, 20).padding(.vertical, 14)
+        .padding(.horizontal, 20).padding(.vertical, 12)
         .background(Paw.pinkSoft)
     }
 
     var footer: some View {
         HStack(spacing: 10) {
             Button("Back") { model.reset() }.buttonStyle(GhostButtonStyle())
-            Button(model.selectedItems.count == model.items.filter { !$0.needsAdmin }.count ? "None" : "All") {
-                model.selectAll(!(model.selectedItems.count == model.items.filter { !$0.needsAdmin }.count))
-            }.buttonStyle(GhostButtonStyle())
-            Spacer()
-            Text("\(model.selectedItems.count) selected · \(ByteFormat.string(model.selectedBytes))")
+            Text("Click a thing to throw. Or…")
                 .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
-            Button {
-                model.bop()
-            } label: {
-                Label(model.selectedItems.count == model.items.count ? "Bop All" : "Bop", systemImage: "pawprint.fill")
+            Spacer()
+            if let r = model.result, !r.trashed.isEmpty {
+                Text("\(r.trashed.count) bopped · \(ByteFormat.string(r.bytesFreed))")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
             }
-            .buttonStyle(PawButtonStyle())
-            .disabled(model.selectedItems.isEmpty)
-            .keyboardShortcut(.defaultAction)
+            Button { bopAll() } label: { Label("Bop All", systemImage: "pawprint.fill") }
+                .buttonStyle(PawButtonStyle())
+                .disabled(model.items.allSatisfy(\.needsAdmin))
+                .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
         .background(Paw.cream)
     }
 }
 
-struct LeftoverRow: View {
-    @EnvironmentObject var model: PawModel
+struct Tile: View {
     let item: Leftover
+    let hit: Bool
+    @State private var hover = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            Toggle("", isOn: Binding(get: { item.selected }, set: { _ in model.toggle(item) }))
-                .toggleStyle(.checkbox).labelsHidden()
-                .disabled(item.needsAdmin)
-            Image(nsImage: NSWorkspace.shared.icon(forFile: item.url.path)).resizable().frame(width: 28, height: 28)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(item.url.lastPathComponent).font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink).lineLimit(1)
-                Text(item.displayPath).font(.system(size: 11, design: .monospaced)).foregroundStyle(Paw.inkSoft).lineLimit(1).truncationMode(.middle)
+        VStack(spacing: 6) {
+            ZStack {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: item.url.path))
+                    .resizable().frame(width: 56, height: 56)
+                    .opacity(hit ? 0 : 1)
+                    .scaleEffect(hit ? 0.3 : 1)
+                if hit {
+                    ClawSlash()
+                    ShardBurst(color: Paw.orange)
+                }
             }
-            Spacer()
+            .frame(height: 64)
+            Text(item.url.lastPathComponent)
+                .font(.system(size: 11, weight: .bold, design: .rounded)).foregroundStyle(Paw.ink)
+                .lineLimit(2).multilineTextAlignment(.center).truncationMode(.middle)
+                .frame(height: 28, alignment: .top)
+            HStack(spacing: 4) {
+                Text(item.category.rawValue).lineLimit(1)
+                Text("·")
+                Text(ByteFormat.string(item.size)).monospacedDigit()
+            }
+            .font(.system(size: 9.5, weight: .semibold, design: .rounded)).foregroundStyle(Paw.inkSoft)
             if item.needsAdmin {
-                Text("admin").font(.system(size: 10, weight: .heavy, design: .rounded)).foregroundStyle(.white)
-                    .padding(.horizontal, 7).padding(.vertical, 3).background(Paw.orange, in: Capsule())
-                    .help("Lives in /Library. Paw won't touch it; remove it by hand with admin rights.")
+                Text("admin").font(.system(size: 9, weight: .heavy, design: .rounded)).foregroundStyle(.white)
+                    .padding(.horizontal, 6).padding(.vertical, 2).background(Paw.orange, in: Capsule())
             }
-            Text(ByteFormat.string(item.size)).font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit()).foregroundStyle(Paw.inkSoft)
-                .frame(width: 70, alignment: .trailing)
         }
-        .padding(.horizontal, 20).padding(.vertical, 6)
-        .background(item.selected ? Paw.pinkSoft.opacity(0.55) : .clear, in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal, 10)
-        .contentShape(Rectangle())
-        .onTapGesture { if !item.needsAdmin { model.toggle(item) } }
-        .contextMenu {
-            Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
-        }
+        .padding(.vertical, 10).padding(.horizontal, 6)
+        .frame(maxWidth: .infinity)
+        .background(hover && !item.needsAdmin ? Paw.pinkSoft : Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(hover && !item.needsAdmin ? Paw.rose : Paw.dash.opacity(0.6), lineWidth: 1.5))
+        .scaleEffect(hover && !item.needsAdmin ? 1.04 : 1)
+        .animation(.spring(duration: 0.18), value: hover)
+        .onHover { hover = $0 }
+        .help(item.displayPath + (item.needsAdmin ? "\nLives in /Library — remove by hand with admin rights." : "\nClick to throw a shuriken at it."))
+        .contextMenu { Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } }
     }
 }
 
