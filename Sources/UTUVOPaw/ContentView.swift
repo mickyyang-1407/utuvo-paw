@@ -6,7 +6,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            Paw.milk.ignoresSafeArea()
+            AmbientBackground()
             switch model.phase {
             case .idle: DropZone()
             case .scanning: ScanningView()
@@ -36,10 +36,11 @@ struct DropZone: View {
     var body: some View {
         VStack(spacing: 18) {
             ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 22)
-                    .strokeBorder(style: StrokeStyle(lineWidth: 3, dash: [10, 8]))
-                    .foregroundStyle(model.isDropTargeted ? Paw.rose : Paw.dash)
-                    .background(RoundedRectangle(cornerRadius: 22).fill(model.isDropTargeted ? Paw.pinkSoft : Paw.cream.opacity(0.5)))
+                Color.clear
+                    .pawGlass(RoundedRectangle(cornerRadius: 22), tint: model.isDropTargeted ? Paw.pinkSoft.opacity(0.8) : nil, fallback: Paw.cream.opacity(0.5))
+                    .overlay(RoundedRectangle(cornerRadius: 22)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 3, dash: [10, 8]))
+                        .foregroundStyle(model.isDropTargeted ? Paw.rose : Paw.dash))
                 VStack(spacing: 10) {
                     Image(systemName: "pawprint.fill")
                         .font(.system(size: 34))
@@ -105,7 +106,8 @@ struct ResultsView: View {
     @State private var mouse: CGPoint = .zero
     @State private var shots: [Shot] = []
     @State private var hits: Set<URL> = []
-    @State private var throwing = false
+    @State private var throwPhase: ThrowPhase = .idle
+    @State private var aimOverride: CGFloat?
     @State private var deskSize: CGSize = .zero
     @State private var lastError: String?
 
@@ -131,7 +133,7 @@ struct ResultsView: View {
                         }
                         .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 170)
                     }
-                    AimingCat(aim: aimValue(in: geo.size), throwing: throwing)
+                    AimingCat(aim: aimOverride ?? aimValue(in: geo.size), phase: throwPhase)
                         .offset(y: 24)
                         .allowsHitTesting(false)
                     ForEach(shots) { shot in
@@ -145,7 +147,6 @@ struct ResultsView: View {
                 .onContinuousHover { phase in
                     if case .active(let p) = phase { mouse = p }
                 }
-                .background(Paw.cream.opacity(0.35))
             }
             if model.needsFullDiskAccess {
                 FullDiskAccessBanner()
@@ -157,7 +158,7 @@ struct ResultsView: View {
                     Button("OK") { withAnimation { lastError = nil } }.buttonStyle(GhostButtonStyle())
                 }
                 .padding(.horizontal, 16).padding(.vertical, 8)
-                .background(Paw.pinkSoft)
+                .pawGlass(Rectangle(), tint: Paw.pinkSoft.opacity(0.7), fallback: Paw.pinkSoft)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             Divider().overlay(Paw.dash)
@@ -172,14 +173,22 @@ struct ResultsView: View {
         return max(-1, min(1, (mouse.x - size.width / 2) / (size.width / 2)))
     }
 
-    func catMouth(in size: CGSize) -> CGPoint { CGPoint(x: size.width / 2 - 70, y: size.height - 170) }
-
     func shoot(_ item: Leftover) {
         guard !item.needsAdmin, !hits.contains(item.url), let f = frames[item.url] else { return }
-        let from = catMouth(in: deskSize)
-        throwing = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { throwing = false }
-        shots.append(Shot(target: item.url, from: from, to: CGPoint(x: f.midX, y: f.midY)))
+        // 1. turn toward the target and wind up
+        let targetAim = max(-1, min(1, (f.midX - deskSize.width / 2) / (deskSize.width / 2)))
+        let facingRight = targetAim > 0.08
+        aimOverride = targetAim
+        throwPhase = .windup
+        // 2. release: shuriken leaves the raised paw
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+            throwPhase = .release
+            let from = AimingCat.pawOrigin(in: deskSize, facingRight: facingRight)
+            shots.append(Shot(target: item.url, from: from, to: CGPoint(x: f.midX, y: f.midY)))
+        }
+        // 3. settle and go back to following the mouse
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.34) { throwPhase = .idle }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { if throwPhase == .idle { aimOverride = nil } }
     }
 
     func land(_ shot: Shot) {
@@ -199,7 +208,7 @@ struct ResultsView: View {
     func bopAll() {
         let targets = model.items.filter { !$0.needsAdmin && !hits.contains($0.url) }
         for (i, item) in targets.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.22) { shoot(item) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.42) { shoot(item) }
         }
     }
 
@@ -223,7 +232,7 @@ struct ResultsView: View {
             }
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
-        .background(Paw.pinkSoft)
+        .pawGlass(Rectangle(), tint: Paw.pinkSoft.opacity(0.6), fallback: Paw.pinkSoft.opacity(0.8))
     }
 
     var footer: some View {
@@ -242,7 +251,7 @@ struct ResultsView: View {
                 .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
-        .background(Paw.cream)
+        .pawGlass(Rectangle(), fallback: Paw.cream.opacity(0.85))
     }
 }
 
@@ -281,8 +290,8 @@ struct Tile: View {
         }
         .padding(.vertical, 10).padding(.horizontal, 6)
         .frame(maxWidth: .infinity)
-        .background(hover && !item.needsAdmin ? Paw.pinkSoft : Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(hover && !item.needsAdmin ? Paw.rose : Paw.dash.opacity(0.6), lineWidth: 1.5))
+        .pawGlass(RoundedRectangle(cornerRadius: 16), tint: hover && !item.needsAdmin ? Paw.pinkSoft.opacity(0.8) : nil, interactive: !item.needsAdmin, fallback: Color.white.opacity(0.7))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(hover && !item.needsAdmin ? Paw.rose : Paw.dash.opacity(0.5), lineWidth: 1.5))
         .scaleEffect(hover && !item.needsAdmin ? 1.04 : 1)
         .animation(.spring(duration: 0.18), value: hover)
         .onHover { hover = $0 }
@@ -306,7 +315,7 @@ struct FullDiskAccessBanner: View {
             Button("Relaunch") { Trasher.relaunch() }.buttonStyle(PawButtonStyle(color: Paw.orange, shadow: Color(red: 0.80, green: 0.48, blue: 0.20)))
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(Paw.pinkSoft)
+        .pawGlass(Rectangle(), tint: Paw.pinkSoft.opacity(0.7), fallback: Paw.pinkSoft)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }

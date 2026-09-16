@@ -110,18 +110,45 @@ struct ShardBurst: View {
 
 // MARK: - The cat that aims
 
+enum ThrowPhase { case idle, windup, release }
+
 struct AimingCat: View {
-    /// -1…1, where the mouse is relative to the cat horizontally.
+    /// -1…1, where the cat is looking (mouse, or the target while throwing).
     var aim: CGFloat
-    var throwing: Bool
+    var phase: ThrowPhase
+    /// The art holds the shuriken in the viewer's-left paw; flip so that paw faces the target.
+    var facingRight: Bool { aim > 0.08 }
+
+    var lean: Double {
+        switch phase {
+        case .idle: return Double(aim) * 10
+        case .windup: return facingRight ? -22 : 22       // lean away from the target
+        case .release: return facingRight ? 16 : -16      // snap toward it
+        }
+    }
+    var squash: CGSize {
+        switch phase {
+        case .idle: return CGSize(width: 1, height: 1)
+        case .windup: return CGSize(width: 0.94, height: 1.06)
+        case .release: return CGSize(width: 1.08, height: 0.92)
+        }
+    }
+
     var body: some View {
         Paw.image("ninja").resizable().scaledToFit()
             .frame(width: 190)
-            .rotationEffect(.degrees(Double(aim) * 12 + (throwing ? -14 : 0)), anchor: .bottom)
-            .scaleEffect(x: throwing ? 1.06 : 1, y: throwing ? 0.94 : 1, anchor: .bottom)
+            .scaleEffect(x: facingRight ? -1 : 1, anchor: .bottom)
+            .scaleEffect(x: squash.width, y: squash.height, anchor: .bottom)
+            .rotationEffect(.degrees(lean), anchor: .bottom)
             .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
+            .animation(.spring(duration: 0.22, bounce: 0.35), value: facingRight)
             .animation(.spring(duration: 0.25), value: aim)
-            .animation(.spring(duration: 0.16, bounce: 0.5), value: throwing)
+            .animation(phase == .release ? .spring(duration: 0.12, bounce: 0.6) : .easeOut(duration: 0.14), value: phase)
+    }
+
+    /// Where the raised paw is, in the desk's coordinate space, given the desk size.
+    static func pawOrigin(in size: CGSize, facingRight: Bool) -> CGPoint {
+        CGPoint(x: size.width / 2 + (facingRight ? 70 : -70), y: size.height - 170)
     }
 }
 

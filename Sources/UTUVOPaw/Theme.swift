@@ -23,6 +23,33 @@ enum Paw {
     }
 }
 
+/// Liquid Glass on macOS 26+, a soft material below that. Same call site either way.
+extension View {
+    @ViewBuilder
+    func pawGlass<S: Shape>(_ shape: S, tint: Color? = nil, interactive: Bool = false, fallback: Color = Paw.milk.opacity(0.7)) -> some View {
+        if #available(macOS 26.0, *) {
+            let glass: Glass = (tint.map { Glass.regular.tint($0) } ?? .regular).interactive(interactive)
+            self.glassEffect(glass, in: shape)
+        } else {
+            self.background(fallback, in: shape).background(.thinMaterial, in: shape)
+        }
+    }
+}
+
+/// Soft pink and peach blobs behind everything so the glass has something to refract.
+struct AmbientBackground: View {
+    var body: some View {
+        ZStack {
+            Paw.milk
+            Circle().fill(Paw.pink.opacity(0.55)).frame(width: 420).blur(radius: 90).offset(x: -220, y: -200)
+            Circle().fill(Color(red: 1, green: 0.86, blue: 0.72).opacity(0.7)).frame(width: 380).blur(radius: 90).offset(x: 240, y: -120)
+            Circle().fill(Paw.rose.opacity(0.28)).frame(width: 360).blur(radius: 100).offset(x: 180, y: 260)
+            Circle().fill(Color(red: 0.86, green: 0.82, blue: 1).opacity(0.55)).frame(width: 300).blur(radius: 90).offset(x: -200, y: 240)
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct PawButtonStyle: ButtonStyle {
     var color: Color = Paw.rose
     var shadow: Color = Paw.roseDark
@@ -33,9 +60,9 @@ struct PawButtonStyle: ButtonStyle {
             .tracking(1)
             .foregroundStyle(.white)
             .padding(.horizontal, 22).padding(.vertical, 11)
-            .background(color, in: Capsule())
-            .background(Capsule().fill(shadow).offset(y: 4))
-            .offset(y: configuration.isPressed ? 3 : 0)
+            .pawGlass(Capsule(), tint: color.opacity(0.9), interactive: true, fallback: color)
+            .shadow(color: shadow.opacity(0.45), radius: configuration.isPressed ? 2 : 8, y: configuration.isPressed ? 1 : 5)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.spring(duration: 0.15), value: configuration.isPressed)
     }
 }
@@ -46,6 +73,8 @@ struct GhostButtonStyle: ButtonStyle {
             .font(.system(size: 13, weight: .bold, design: .rounded))
             .foregroundStyle(Paw.inkSoft)
             .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(Paw.pinkSoft.opacity(configuration.isPressed ? 1 : 0.6), in: Capsule())
+            .pawGlass(Capsule(), tint: configuration.isPressed ? Paw.pinkSoft : nil, interactive: true, fallback: Paw.pinkSoft.opacity(0.7))
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.spring(duration: 0.15), value: configuration.isPressed)
     }
 }

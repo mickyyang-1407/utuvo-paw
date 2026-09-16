@@ -133,10 +133,32 @@ enum Trasher {
         var errorDescription: String? { "\(url.lastPathComponent) lives in a protected folder. Give UTUVO Paw Full Disk Access, then relaunch." }
     }
 
-    /// TCC.db is unreadable without Full Disk Access; that is the standard probe.
+    /// Files that only a process with Full Disk Access may open. Any one readable → FDA is on.
+    /// If none of them exist on this Mac we cannot tell and assume it is on (no nagging).
     static var hasFullDiskAccess: Bool {
-        let probe = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/com.apple.TCC/TCC.db")
-        return FileHandle(forReadingAtPath: probe.path) != nil
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let probes = [
+            "Library/Application Support/com.apple.TCC/TCC.db",
+            "Library/Safari/Bookmarks.plist",
+            "Library/Messages/chat.db",
+            "Library/Mail",
+            "Library/Cookies",
+        ].map { home.appendingPathComponent($0) }
+        var sawOne = false
+        for p in probes {
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: p.path, isDirectory: &isDir) else { continue }
+            sawOne = true
+            let ok: Bool
+            if isDir.boolValue {
+                ok = (try? FileManager.default.contentsOfDirectory(atPath: p.path)) != nil
+            } else {
+                ok = FileHandle(forReadingAtPath: p.path) != nil
+            }
+            NSLog("UTUVO Paw: FDA probe %@ → %@", p.lastPathComponent, ok ? "readable" : "denied")
+            if ok { return true }
+        }
+        return !sawOne
     }
 
     /// Folders where a plain EPERM means "no Full Disk Access" rather than "wrong owner".
