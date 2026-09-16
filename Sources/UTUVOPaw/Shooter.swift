@@ -110,45 +110,69 @@ struct ShardBurst: View {
 
 // MARK: - The cat that aims
 
-enum ThrowPhase { case idle, windup, release }
+enum ThrowPhase { case idle, turning, release, returning }
 
+/// The cat faces you while idle. To throw it spins round (Y-axis flip), shows its back to you,
+/// throws at the desk, and spins back. `ninja-back` is the back-view art; until it exists the
+/// front art is mirrored as a stand-in.
 struct AimingCat: View {
-    /// -1…1, where the cat is looking (mouse, or the target while throwing).
-    var aim: CGFloat
+    var aim: CGFloat          // -1…1 where the cat is looking
     var phase: ThrowPhase
-    /// The art holds the shuriken in the viewer's-left paw; flip so that paw faces the target.
-    var facingRight: Bool { aim > 0.08 }
 
+    static var hasBackArt: Bool { Bundle.module.url(forResource: "ninja-back", withExtension: "png", subdirectory: "Assets") != nil }
+
+    var turn: Double {
+        switch phase {
+        case .idle: return 0
+        case .turning: return 180
+        case .release: return 180
+        case .returning: return 360
+        }
+    }
+    var showingBack: Bool { phase == .turning || phase == .release }
     var lean: Double {
         switch phase {
         case .idle: return Double(aim) * 10
-        case .windup: return facingRight ? -22 : 22       // lean away from the target
-        case .release: return facingRight ? 16 : -16      // snap toward it
+        case .turning: return Double(aim) * -14        // wind up away from the target
+        case .release: return Double(aim) * 18         // snap toward it
+        case .returning: return Double(aim) * 6
         }
     }
     var squash: CGSize {
         switch phase {
-        case .idle: return CGSize(width: 1, height: 1)
-        case .windup: return CGSize(width: 0.94, height: 1.06)
+        case .turning: return CGSize(width: 0.94, height: 1.06)
         case .release: return CGSize(width: 1.08, height: 0.92)
+        default: return CGSize(width: 1, height: 1)
         }
     }
 
     var body: some View {
-        Paw.image("ninja").resizable().scaledToFit()
-            .frame(width: 190)
-            .scaleEffect(x: facingRight ? -1 : 1, anchor: .bottom)
-            .scaleEffect(x: squash.width, y: squash.height, anchor: .bottom)
-            .rotationEffect(.degrees(lean), anchor: .bottom)
-            .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
-            .animation(.spring(duration: 0.22, bounce: 0.35), value: facingRight)
-            .animation(.spring(duration: 0.25), value: aim)
-            .animation(phase == .release ? .spring(duration: 0.12, bounce: 0.6) : .easeOut(duration: 0.14), value: phase)
+        ZStack {
+            Paw.image("ninja").resizable().scaledToFit()
+                .opacity(showingBack ? 0 : 1)
+            Group {
+                if Self.hasBackArt {
+                    Paw.image("ninja-back").resizable().scaledToFit()
+                } else {
+                    Paw.image("ninja").resizable().scaledToFit().scaleEffect(x: -1).saturation(0.85).brightness(-0.05)
+                }
+            }
+            .scaleEffect(x: -1)              // the flip below mirrors it back; this keeps the art upright
+            .opacity(showingBack ? 1 : 0)
+        }
+        .frame(width: 190)
+        .scaleEffect(x: squash.width, y: squash.height, anchor: .bottom)
+        .rotation3DEffect(.degrees(turn), axis: (x: 0, y: 1, z: 0), perspective: 0.35)
+        .rotationEffect(.degrees(lean), anchor: .bottom)
+        .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
+        .animation(.spring(duration: 0.25), value: aim)
+        // 360° == 0°, so the hop back to idle must be instant or the cat would unspin.
+        .animation(phase == .idle ? nil : (phase == .release ? .spring(duration: 0.12, bounce: 0.6) : .easeInOut(duration: 0.22)), value: phase)
     }
 
-    /// Where the raised paw is, in the desk's coordinate space, given the desk size.
-    static func pawOrigin(in size: CGSize, facingRight: Bool) -> CGPoint {
-        CGPoint(x: size.width / 2 + (facingRight ? 70 : -70), y: size.height - 170)
+    /// Where the throwing paw is, in the desk's coordinate space, when the cat shows its back.
+    static func pawOrigin(in size: CGSize) -> CGPoint {
+        CGPoint(x: size.width / 2 + 48, y: size.height - 172)
     }
 }
 

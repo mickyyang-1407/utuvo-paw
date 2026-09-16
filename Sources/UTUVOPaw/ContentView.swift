@@ -175,20 +175,20 @@ struct ResultsView: View {
 
     func shoot(_ item: Leftover) {
         guard !item.needsAdmin, !hits.contains(item.url), let f = frames[item.url] else { return }
-        // 1. turn toward the target and wind up
         let targetAim = max(-1, min(1, (f.midX - deskSize.width / 2) / (deskSize.width / 2)))
-        let facingRight = targetAim > 0.08
         aimOverride = targetAim
-        throwPhase = .windup
-        // 2. release: shuriken leaves the raised paw
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+        // 1. spin round to face the desk (back to the viewer)
+        throwPhase = .turning
+        // 2. throw from the raised paw
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) {
             throwPhase = .release
-            let from = AimingCat.pawOrigin(in: deskSize, facingRight: facingRight)
-            shots.append(Shot(target: item.url, from: from, to: CGPoint(x: f.midX, y: f.midY)))
+            shots.append(Shot(target: item.url, from: AimingCat.pawOrigin(in: deskSize), to: CGPoint(x: f.midX, y: f.midY)))
         }
-        // 3. settle and go back to following the mouse
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.34) { throwPhase = .idle }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { if throwPhase == .idle { aimOverride = nil } }
+        // 3. spin back to face the viewer, then follow the mouse again
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) { throwPhase = .returning }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.66) {
+            if throwPhase == .returning { throwPhase = .idle; aimOverride = nil }
+        }
     }
 
     func land(_ shot: Shot) {
@@ -208,7 +208,7 @@ struct ResultsView: View {
     func bopAll() {
         let targets = model.items.filter { !$0.needsAdmin && !hits.contains($0.url) }
         for (i, item) in targets.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.42) { shoot(item) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.5) { shoot(item) }
         }
     }
 
