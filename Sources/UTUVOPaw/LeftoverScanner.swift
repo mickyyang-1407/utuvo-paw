@@ -142,10 +142,43 @@ enum Trasher {
                 result.trashed.append(item)
                 if let dest { result.trashedTo.append(dest as URL) }
             } catch {
-                result.failed.append((item, error))
+                // Root-owned apps (App Store installs) and TCC-protected folders such as
+                // ~/Library/Containers refuse FileManager. Finder has the rights: it asks for an
+                // admin password when needed. First use prompts once for Automation access.
+                NSLog("UTUVO Paw: trashItem failed for %@ — %@; asking Finder", item.url.path, error.localizedDescription)
+                do {
+                    try finderTrash(item.url)
+                    result.trashed.append(item)
+                    result.trashedTo.append(FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".Trash/" + item.url.lastPathComponent))
+                } catch let finderError {
+                    NSLog("UTUVO Paw: Finder refused %@ — %@", item.url.path, finderError.localizedDescription)
+                    result.failed.append((item, finderError))
+                }
             }
         }
         return result
+    }
+
+    /// Ask Finder to move the item to the Trash. Runs on the main thread (Apple events + auth dialog).
+    static func finderTrash(_ url: URL) throws {
+        let escaped = url.path.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+        let source = "tell application \"Finder\" to delete (POSIX file \"\(escaped)\" as alias)"
+        var failure: NSError?
+        let run = {
+            var errInfo: NSDictionary?
+            NSAppleScript(source: source)?.executeAndReturnError(&errInfo)
+            if let errInfo {
+                let msg = (errInfo[NSAppleScript.errorMessage] as? String) ?? "Finder refused"
+                let code = (errInfo[NSAppleScript.errorNumber] as? Int) ?? 2
+                let hint = code == -1743 ? " — allow UTUVO Paw to control Finder in System Settings › Privacy & Security › Automation." : ""
+                failure = NSError(domain: "UTUVOPaw.Finder", code: code, userInfo: [NSLocalizedDescriptionKey: msg + hint])
+            }
+        }
+        if Thread.isMainThread { run() } else { DispatchQueue.main.sync(execute: run) }
+        if let failure { throw failure }
+        if FileManager.default.fileExists(atPath: url.path) {
+            throw NSError(domain: "UTUVOPaw.Finder", code: 3, userInfo: [NSLocalizedDescriptionKey: "Finder did not move it (cancelled?)"])
+        }
     }
 
     static func isSafe(_ url: URL) -> Bool {

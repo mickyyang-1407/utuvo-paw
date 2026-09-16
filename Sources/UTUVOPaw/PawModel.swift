@@ -58,7 +58,7 @@ final class PawModel: ObservableObject {
     }
 
     /// Trash one thing (after the shuriken lands). `done` runs on the main actor when it is gone.
-    func bop(url: URL, done: @escaping () -> Void) {
+    func bop(url: URL, done: @escaping (String?) -> Void) {
         guard let item = items.first(where: { $0.url == url }) else { return }
         Task.detached(priority: .userInitiated) {
             let r = Trasher.bop([item])
@@ -68,7 +68,7 @@ final class PawModel: ObservableObject {
                 acc.trashed += r.trashed; acc.trashedTo += r.trashedTo; acc.failed += r.failed
                 self.result = acc
                 if r.failed.isEmpty { self.items.removeAll { $0.url == url } }
-                done()
+                done(r.failed.first.map { "Couldn't bop \($0.0.url.lastPathComponent): \($0.1.localizedDescription)" })
                 if self.items.allSatisfy(\.needsAdmin) && !self.items.isEmpty || self.items.isEmpty {
                     self.phase = .done
                 }

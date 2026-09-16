@@ -100,6 +100,7 @@ struct ResultsView: View {
     @State private var hits: Set<URL> = []
     @State private var throwing = false
     @State private var deskSize: CGSize = .zero
+    @State private var lastError: String?
 
     struct Shot: Identifiable { let id = UUID(); let target: URL; let from: CGPoint; let to: CGPoint }
 
@@ -139,6 +140,17 @@ struct ResultsView: View {
                 }
                 .background(Paw.cream.opacity(0.35))
             }
+            if let e = lastError {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Paw.orange)
+                    Text(e).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(Paw.roseDark).lineLimit(2)
+                    Spacer()
+                    Button("OK") { withAnimation { lastError = nil } }.buttonStyle(GhostButtonStyle())
+                }
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .background(Paw.pinkSoft)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
             Divider().overlay(Paw.dash)
             footer
         }
@@ -166,8 +178,12 @@ struct ResultsView: View {
         guard !hits.contains(shot.target) else { return }
         hits.insert(shot.target)
         NSSound(named: "Pop")?.play()
-        model.bop(url: shot.target) {
+        model.bop(url: shot.target) { failure in
             withAnimation(.easeIn(duration: 0.25)) { _ = hits.remove(shot.target) }
+            if let failure {
+                withAnimation { lastError = failure }
+                NSSound(named: "Basso")?.play()
+            }
         }
     }
 
