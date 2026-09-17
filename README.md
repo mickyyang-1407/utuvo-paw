@@ -1,4 +1,8 @@
+<p align="center"><img src="docs/assets/og.png" alt="UTUVO Paw — the uninstaller with paws" width="900"></p>
+
 # UTUVO Paw
+
+**Website: https://mickyyang-1407.github.io/utuvo-paw/** · click the apps, the cat throws things.
 
 The uninstaller with paws. Drop an app in, the cat sniffs out every leftover file
 (caches, preferences, support folders, saved state, containers, launch agents…),
@@ -30,6 +34,11 @@ swift test                          # matcher + safety tests
 - Everything goes through `FileManager.trashItem`. Paths outside `~/Library`, `/Library`
   or an `.app` bundle are refused by `Trasher.isSafe`.
 
+## Credits
+
+Cat art rendered with GPT from prompts by the author. Fonts: [Fredoka](https://github.com/hafontia/Fredoka-One) and [Nunito](https://github.com/googlefonts/nunito), both SIL OFL 1.1 (see `Sources/UTUVOPaw/Fonts/`). Sounds are synthesised (numpy, no samples) — replace `Sources/UTUVOPaw/Sounds/*.wav` with your own.
+Inspired by the wonderful [AppZapper](https://appzapper.com). Different cat.
+
 ## Layout
 
 ```
@@ -37,5 +46,7 @@ Sources/UTUVOPaw/   SwiftUI app (PawApp, ContentView, PawModel, LeftoverScanner,
 Sources/UTUVOPaw/Assets/   cat art (PNG)
 Resources/          Info.plist, AppIcon.icns
 scripts/build-app.sh
-Tests/              Matcher, Trasher safety, AppInspector
+Tests/              Matcher, Trasher safety, AppInspector, font registration, real-disk scan→Trash round trip
+docs/               the website (GitHub Pages)
+scripts/make-fake-app.sh   plants a fake app + leftovers to play with
 ```

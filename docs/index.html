@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="UTUVO Paw — the free, open-source macOS uninstaller with paws. Drop an app in, the cat finds every leftover file and throws it in the Trash.">
+<meta property="og:title" content="UTUVO Paw"><meta property="og:description" content="The uninstaller with paws. Free, open source, MIT."><meta property="og:image" content="assets/og.png">
+<meta charset="utf-8">
+<title>UTUVO Paw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,500;0,700;0,800;1,600&display=swap">
+<style>
+  :root{
+    --night:#2A2140; --night-2:#372C55; --night-3:#463A6B;
+    --cream:#FFF3E4; --pink:#FFC9D6; --pink-2:#FFB3C6; --rose:#FF6B8B; --rose-dark:#E2496C;
+    --orange:#F5A05A; --fur:#FFE1B8; --fur-dark:#F3C98F; --bean:#FF9FB5;
+    --ink:#3B2A3E; --ink-soft:#6E5A72; --milk:#FFFDF8; --star:#FFE6A3; --mint:#9FE3C9;
+    --shadow:0 12px 30px rgba(58,32,60,.18);
+    --display:"Fredoka","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
+    --body:"Nunito","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--night);color:var(--milk);font-family:var(--body);font-size:17px;line-height:1.55;overflow-x:hidden}
+  h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1}
+  p{margin:0}
+  a{color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding-inline:20px}
+  section{position:relative}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;gap:.5em;font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;padding:.85em 1.7em;border-radius:999px;border:0;cursor:pointer;text-decoration:none;color:var(--milk);position:relative;box-shadow:0 6px 0 rgba(0,0,0,.18),0 14px 28px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s}
+  .btn:hover{transform:translateY(-3px)}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .btn:focus-visible{outline:3px solid var(--star);outline-offset:3px}
+  .btn-try{background:linear-gradient(180deg,#FFB067,#F58F3C)}
+  .btn-buy{background:linear-gradient(180deg,#FF7E9B,#E9486D)}
+  .btn-help{background:linear-gradient(180deg,#5B4C86,#463A6B)}
+  .btn svg{width:1.15em;height:1.15em}
+
+  /* ---------- hero ---------- */
+  .hero{padding-block:56px 0;text-align:center;overflow:hidden;background:
+    radial-gradient(circle at 50% 30%,rgba(255,179,198,.22),transparent 45%),
+    repeating-conic-gradient(from 0deg at 50% 38%,var(--night) 0 9deg,var(--night-2) 9deg 18deg)}
+  .stars{position:absolute;inset:0;pointer-events:none}
+  .stars i{position:absolute;width:6px;height:6px;background:var(--star);border-radius:50%;opacity:.8;box-shadow:0 0 10px var(--star);animation:twinkle 3s ease-in-out infinite}
+  @keyframes twinkle{50%{opacity:.25;transform:scale(.6)}}
+  .logo{display:inline-flex;align-items:center;gap:18px;justify-content:center;flex-wrap:wrap}
+  .logo h1{font-size:clamp(3rem,9vw,5.6rem);font-weight:700;letter-spacing:.01em;text-transform:lowercase;
+    background:linear-gradient(180deg,#FFD39B 0%,#F5A05A 55%,#E98A3C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.25))}
+  .logo h1 span{background:linear-gradient(180deg,#FFB3C6,#FF6B8B 60%,#E2496C);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo-cat{width:clamp(84px,14vw,140px);height:auto;animation:bob 3s ease-in-out infinite;filter:drop-shadow(0 8px 12px rgba(0,0,0,.35))}
+  @keyframes bob{50%{transform:translateY(-6px) rotate(-4deg)}}
+  .tagline{font-size:clamp(1.15rem,2.6vw,1.5rem);font-weight:700;color:#EADFF5;margin-top:10px}
+  .tagline em{font-style:normal;color:var(--pink)}
+  .cta{display:flex;gap:16px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+  .free{margin-top:16px;font-family:var(--display);font-weight:600;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mint)}
+
+  /* ---------- dojo (playable hero) ---------- */
+  .dojo{position:relative;max-width:980px;height:clamp(420px,58vw,560px);margin:44px auto 0;border-radius:28px;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 100%,rgba(255,143,171,.35),transparent 55%),linear-gradient(180deg,#1E1733,#2E2447 60%,#3A2E5C);
+    box-shadow:0 40px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.08);cursor:crosshair;user-select:none;-webkit-user-select:none}
+  .dojo .moon{position:absolute;right:9%;top:8%;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFF6D6,#FFE6A3 60%,#F5C76B);box-shadow:0 0 60px rgba(255,230,163,.5)}
+  .dojo .hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);font-family:var(--display);font-weight:600;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#C9B8F0;background:rgba(0,0,0,.25);padding:6px 14px;border-radius:999px;pointer-events:none;white-space:nowrap;transition:opacity .3s}
+  .dojo .score{position:absolute;right:16px;bottom:14px;font-family:var(--display);font-weight:600;font-size:.85rem;color:#FFE6A3;background:rgba(0,0,0,.3);padding:6px 12px;border-radius:999px;pointer-events:none}
+  .floor{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,rgba(255,179,198,0),rgba(255,179,198,.22));pointer-events:none}
+  .target{position:absolute;width:clamp(64px,9vw,88px);aspect-ratio:1;border:0;padding:0;cursor:crosshair;border-radius:22%;display:grid;place-items:center;font-size:clamp(1.6rem,3.6vw,2.4rem);
+    box-shadow:0 12px 30px rgba(0,0,0,.4),inset 0 -6px 0 rgba(0,0,0,.12);animation:drift var(--d,7s) ease-in-out var(--o,0s) infinite alternate;transition:transform .15s;will-change:transform}
+  .target:hover{transform:scale(1.1)}
+  .target:focus-visible{outline:3px solid var(--star);outline-offset:3px}
+  .target .lab{position:absolute;left:50%;transform:translateX(-50%);bottom:-22px;font-family:var(--display);font-weight:600;font-size:.7rem;color:#D9CFEA;letter-spacing:.04em;white-space:nowrap}
+  @keyframes drift{from{translate:0 0}to{translate:var(--dx,12px) var(--dy,-16px)}}
+  .target.hit{animation:none;pointer-events:none}
+  .target.hit .face{animation:crumble .55s ease-in forwards}
+  @keyframes crumble{0%{transform:scale(1)}30%{transform:scale(1.06) rotate(-4deg)}100%{transform:scale(.2) rotate(30deg);opacity:0}}
+  .target .face{display:grid;place-items:center;width:100%;height:100%}
+  .slash{position:absolute;inset:-12%;width:124%;height:124%;pointer-events:none;opacity:0}
+  .target.hit .slash{opacity:1}
+  .slash path{stroke:#fff;stroke-width:4;stroke-linecap:round;fill:none;filter:drop-shadow(0 0 4px var(--rose));stroke-dasharray:120;stroke-dashoffset:120}
+  .target.hit .slash path{animation:cut .22s ease-out forwards}
+  .target.hit .slash path:nth-child(2){animation-delay:.05s}.target.hit .slash path:nth-child(3){animation-delay:.1s}
+  @keyframes cut{to{stroke-dashoffset:0}}
+  .shard{position:absolute;left:50%;top:50%;width:12px;height:10px;border-radius:3px;pointer-events:none;animation:shard .7s ease-out forwards}
+  @keyframes shard{0%{transform:translate(-50%,-50%) rotate(0);opacity:1}100%{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r));opacity:0}}
+  .pop{position:absolute;left:50%;top:0;font-family:var(--display);font-weight:600;font-size:1.4rem;color:var(--pink);text-shadow:0 2px 0 #E2496C;pointer-events:none;animation:popup .8s ease-out forwards}
+  @keyframes popup{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}25%{opacity:1;transform:translate(-50%,-10px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-60px) scale(1)}}
+  .ninja{position:absolute;left:50%;bottom:-6px;width:clamp(170px,26vw,260px);aspect-ratio:720/681;transform:translateX(-50%) rotate(var(--lean,0deg));transform-origin:50% 100%;transition:transform .25s;pointer-events:none;perspective:900px}
+  .ninja .card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .26s ease-in-out;transform-origin:50% 100%}
+  .ninja .card img{position:absolute;left:0;bottom:0;width:100%;height:auto;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 16px 24px rgba(0,0,0,.45))}
+  .ninja .card img.back{transform:rotateY(180deg) scaleX(-1)}
+  .ninja.throwing .card{transform:rotateY(180deg) scale(1.06,.94)}
+  .ninja.windup .card{transform:rotateY(180deg) scale(.94,1.06)}
+  .star{position:absolute;width:56px;height:56px;pointer-events:none;will-change:transform;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+  .star.fly{animation:fly var(--t,.36s) ease-in forwards}
+  @keyframes fly{to{transform:translate(var(--tx),var(--ty)) rotate(900deg) scale(.7)}}
+  .clear{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,4vw,2.6rem);color:var(--pink);text-shadow:0 3px 0 #E2496C;pointer-events:none;opacity:0;transition:opacity .4s}
+  .clear.show{opacity:1}
+  @media (max-width:640px){.dojo .hint{font-size:.7rem}.target .lab{display:none}}
+  @media (prefers-reduced-motion:reduce){.target{animation:none}}
+
+  /* ---------- wave dividers ---------- */
+  .wave{display:block;width:100%;height:70px}
+  .wave.pink path{fill:var(--pink)}
+  .wave.night path{fill:var(--night)}
+
+  /* ---------- section: pink ---------- */
+  .pinkbg{background:var(--pink);color:var(--ink)}
+  .sec{padding-block:64px 88px}
+  .big{font-size:clamp(2.4rem,7vw,4.4rem);font-weight:700;text-transform:uppercase;letter-spacing:.01em;text-align:center}
+  .big .b{color:var(--rose-dark)}
+  .lede{max-width:640px;margin:22px auto 0;text-align:center;font-size:clamp(1.05rem,2.2vw,1.3rem);font-weight:700}
+  .lede strong{font-weight:800;font-style:italic}
+
+  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:52px;align-items:start}
+  @media (max-width:800px){.flow{grid-template-columns:1fr;max-width:420px;margin-inline:auto}}
+  .card-win{background:#FFF8FB;border-radius:16px;box-shadow:var(--shadow);overflow:hidden;position:relative;color:var(--ink)}
+  .card-win .win-bar{background:#F4E6EE}
+  .card-win .body{padding:16px;min-height:190px;position:relative}
+  .step{text-align:center;margin-top:16px;font-family:var(--display);font-weight:600;font-size:1.15rem}
+  .step small{display:block;font-family:var(--body);font-weight:700;font-size:.9rem;color:var(--ink-soft)}
+  .files{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .file{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.62rem;font-weight:700;color:var(--ink-soft);text-align:center}
+  .file b{width:36px;height:44px;border-radius:6px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.12);display:grid;place-items:center;font-size:1.1rem;position:relative}
+  .file b::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 10px 10px 0;border-color:transparent #F4E6EE transparent transparent}
+  .file.app b{width:44px;height:44px;border-radius:22%;background:linear-gradient(135deg,#7C6BFF,#B7A4FF);font-size:1.5rem}
+  .file.app b::after{display:none}
+  .card-win .cat-corner{position:absolute;width:110px;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15))}
+  .tumble{position:relative;height:190px;overflow:hidden;background:radial-gradient(circle at 50% 120%,#FFE1EA,transparent 70%)}
+  .tumble .t{position:absolute;width:36px;height:36px;border-radius:22%;display:grid;place-items:center;font-size:1.2rem;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.15);animation:tumble 3s ease-in infinite}
+  @keyframes tumble{0%{transform:translate(0,-60px) rotate(0);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),230px) rotate(var(--rot));opacity:1}}
+  .tumble .pushcat{position:absolute;right:-8px;bottom:-6px;width:78%;height:auto}
+  .tumble .t{left:auto!important}
+  .tumble .t:nth-child(1){left:6%!important}.tumble .t:nth-child(2){left:16%!important}.tumble .t:nth-child(3){left:2%!important}.tumble .t:nth-child(4){left:20%!important}.tumble .t:nth-child(5){left:10%!important}
+  .zap-all{position:absolute;right:12px;bottom:12px;background:var(--rose);color:#fff;font-family:var(--display);font-weight:600;font-size:.75rem;padding:5px 12px;border-radius:999px;box-shadow:0 3px 0 var(--rose-dark)}
+  .arrow{display:none}
+  @media (min-width:801px){
+    .arrow{display:block;position:absolute;top:60px;width:60px;height:auto}
+    .a1{left:-44px}.a2{left:-44px}
+  }
+
+  /* ---------- section: anatomy (night) ---------- */
+  .nightbg{background:var(--night);color:var(--milk)}
+  .nightbg .big{color:var(--milk)}
+  .nightbg .big .b{color:var(--pink)}
+  .anatomy{position:relative;margin:48px auto 0;max-width:900px;display:grid;grid-template-columns:1fr minmax(260px,380px) 1fr;gap:20px;align-items:center}
+  .anatomy .hero-cat{width:100%;height:auto;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));animation:bob 4s ease-in-out infinite}
+  .callouts{display:grid;gap:24px}
+  .callout{background:var(--night-2);border-radius:18px;padding:16px 18px;position:relative;border:2px solid var(--night-3)}
+  .callout h3{font-size:1.15rem;font-weight:600;color:var(--pink);margin-bottom:4px}
+  .callout p{font-size:.95rem;color:#D9CFEA;font-weight:600}
+  .callout::before{content:"";position:absolute;top:50%;width:10px;height:10px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 4px rgba(255,107,139,.3)}
+  .callouts.l .callout::before{right:-24px}.callouts.r .callout::before{left:-24px}
+  @media (max-width:800px){
+    .anatomy{grid-template-columns:1fr;max-width:460px}
+    .anatomy .hero-cat{order:-1;max-width:300px;margin:0 auto}
+    .callout::before{display:none}
+  }
+
+  /* ---------- section: testimonials (pink) ---------- */
+  .legacy{max-width:680px;margin:20px auto 0;text-align:center;font-size:clamp(1.05rem,2.2vw,1.3rem);font-weight:700}
+  .legacy strong{font-weight:800;font-style:italic;color:var(--rose-dark)}
+  .quotes{columns:3;column-gap:20px;margin-top:44px}
+  @media (max-width:800px){.quotes{columns:2}}
+  @media (max-width:520px){.quotes{columns:1}}
+  .q{break-inside:avoid;background:#FFF8FB;border-radius:16px;padding:18px 20px 16px;margin-bottom:20px;box-shadow:var(--shadow);position:relative;transform:rotate(var(--tilt,0deg))}
+  .q p{font-weight:700;font-size:.98rem}
+  .q .who{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--display);font-weight:600;font-size:.85rem;color:var(--rose-dark);text-transform:uppercase;letter-spacing:.08em}
+  .q .who img{width:44px;height:44px;flex:none;object-fit:contain}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--night);text-align:center;padding-block:56px 30px}
+  footer .logo h1{font-size:clamp(2.2rem,6vw,3.6rem)}
+  .app-icon{width:120px;height:120px;border-radius:27%;margin:24px auto;background:linear-gradient(160deg,#FFD5E1,#FF8FAB 55%,#E2496C);display:grid;place-items:center;box-shadow:0 20px 40px rgba(0,0,0,.45),inset 0 -6px 0 rgba(0,0,0,.12)}
+  .app-icon img{width:96px;height:auto}
+  .meta{margin-top:44px;padding-top:20px;border-top:1px solid var(--night-3);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.8rem;font-weight:700;color:#9C8FB8;letter-spacing:.06em;text-transform:uppercase}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SVG symbols ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- tiny paw print (for buttons) -->
+    <symbol id="pawprint" viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="5" cy="10" r="2.4"/><circle cx="9.5" cy="6" r="2.4"/><circle cx="14.5" cy="6" r="2.4"/><circle cx="19" cy="10" r="2.4"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="M12 2 l3 6.5 7 .8 -5.2 4.8 1.4 7 -6.2 -3.6 -6.2 3.6 1.4 -7 -5.2 -4.8 7 -.8z"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M12 21 C4 15 2 11 2 7.5 2 4.5 4.5 3 6.7 3 9 3 11 4.5 12 6 13 4.5 15 3 17.3 3 19.5 3 22 4.5 22 7.5 22 11 20 15 12 21z"/></symbol>
+    <symbol id="arrow" viewBox="0 0 60 40"><path d="M4 8 q28 -6 48 22" stroke="#3B2A3E" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="1 6"/><path d="M44 30 l8 2 l-2 -8" stroke="#3B2A3E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="stars" aria-hidden="true">
+    <i style="left:8%;top:12%"></i><i style="left:18%;top:40%;animation-delay:.7s"></i><i style="left:30%;top:8%;animation-delay:1.4s"></i>
+    <i style="left:70%;top:14%;animation-delay:.3s"></i><i style="left:84%;top:36%;animation-delay:1.9s"></i><i style="left:92%;top:10%;animation-delay:1.1s"></i>
+    <i style="left:60%;top:48%;animation-delay:2.3s"></i><i style="left:12%;top:62%;animation-delay:.9s"></i>
+  </div>
+  <div class="wrap">
+    <div class="logo">
+      <img class="logo-cat" src="assets/logo.webp" alt="" width="756" height="800">
+      <h1>utuvo<span>paw</span></h1>
+    </div>
+    <p class="tagline">The uninstaller with <em>paws</em>. Drop an app in. The cat finds every leftover. Then it throws things.</p>
+    <div class="cta">
+      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>Download</a>
+      <a class="btn btn-buy" href="https://github.com/mickyyang-1407/utuvo-paw"><svg aria-hidden="true"><use href="#star"/></svg>GitHub</a>
+    </div>
+    <p class="free">Free. Open source. MIT licensed. No fish required.</p>
+
+    <div class="dojo" id="dojo" aria-label="Playable demo: click an app to throw a shuriken at it">
+      <div class="moon" aria-hidden="true"></div>
+      <div class="floor" aria-hidden="true"></div>
+      <div class="hint" id="hint">Click an app · the cat does the rest</div>
+      <div class="targets" id="targets"></div>
+      <div class="ninja" id="ninja" aria-hidden="true">
+        <div class="card">
+          <img class="front" src="assets/ninja.webp" alt="" width="720" height="647">
+          <img class="back" src="assets/ninja-back.webp" alt="" width="720" height="681">
+        </div>
+      </div>
+      <div class="clear" id="clear">desk clear 🐾</div>
+      <div class="score" id="score">0 bopped</div>
+    </div>
+  </div>
+  <svg class="wave pink" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
+</section>
+
+<!-- ============ DRAG. DROP. BOOP. ============ -->
+<section class="pinkbg sec">
+  <div class="wrap">
+    <h2 class="big">Drag. Drop. <span class="b">Boop.</span></h2>
+    <p class="lede">The most huggable uninstaller for macOS. Drag in any app and UTUVO Paw <strong>sniffs out every leftover file</strong> — caches, preferences, support folders. Then a <strong>real cat paw</strong> knocks them all off the desk. Because that's what cats do.</p>
+
+    <div class="flow">
+      <div>
+        <div class="card-win">
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">UTUVO Paw</span></div>
+          <div class="body">
+            <div class="drop" style="margin:0;height:160px"><div class="hint"><svg aria-hidden="true"><use href="#pawprint" fill="currentColor"/></svg>Drop apps here</div></div>
+            <img class="cat-corner" style="right:18px;bottom:14px" src="assets/loaf.webp" alt="" width="600" height="461">
+          </div>
+        </div>
+        <p class="step">1. Drop an app<small>The cat is napping. For now.</small></p>
+      </div>
+      <div style="position:relative">
+        <svg class="arrow a1" viewBox="0 0 60 40" aria-hidden="true"><use href="#arrow"/></svg>
+        <div class="card-win">
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">Cliply — 7 things found</span></div>
+          <div class="body">
+            <div class="files">
+              <div class="file app"><b>📎</b>Cliply.app</div>
+              <div class="file"><b>📄</b>com.cliply.plist</div>
+              <div class="file"><b>📁</b>App Support</div>
+              <div class="file"><b>🗂️</b>Caches</div>
+              <div class="file"><b>📄</b>Login item</div>
+              <div class="file"><b>🍪</b>Cookies</div>
+            </div>
+            <span class="zap-all">Bop All 🐾</span>
+          </div>
+        </div>
+        <p class="step">2. Whiskers find everything<small>Nothing hides from a cat.</small></p>
+      </div>
+      <div style="position:relative">
+        <svg class="arrow a2" viewBox="0 0 60 40" aria-hidden="true"><use href="#arrow"/></svg>
+        <div class="card-win">
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">bye bye</span></div>
+          <div class="tumble" aria-hidden="true">
+            <span class="t" style="left:18%;--dx:-30px;--rot:-260deg;animation-delay:0s">📎</span>
+            <span class="t" style="left:34%;--dx:20px;--rot:400deg;animation-delay:.5s">📄</span>
+            <span class="t" style="left:50%;--dx:-10px;--rot:-180deg;animation-delay:.9s">📁</span>
+            <span class="t" style="left:64%;--dx:36px;--rot:300deg;animation-delay:1.3s">🗂️</span>
+            <span class="t" style="left:26%;--dx:14px;--rot:-330deg;animation-delay:1.8s">🍪</span>
+            <img class="pushcat" src="assets/push.webp" alt="" width="800" height="611">
+          </div>
+        </div>
+        <p class="step">3. Off the desk<small>Gone. Completely. Purr.</small></p>
+      </div>
+    </div>
+  </div>
+  <svg class="wave night" viewBox="0 0 1440 70" preserveAspectRatio="none" style="position:absolute;left:0;bottom:-1px" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
+</section>
+
+<!-- ============ READY. AIM. BOOP. ============ -->
+<section class="nightbg sec" style="padding-top:40px">
+  <div class="wrap">
+    <h2 class="big">Ready. <span class="b">Aim.</span> Boop.</h2>
+    <div class="anatomy">
+      <div class="callouts l">
+        <div class="callout"><h3>The whiskers.</h3><p>Sniff out every leftover an app drops on your Mac. Caches, preferences, support files — target locked.</p></div>
+        <div class="callout"><h3>Toe beans.</h3><p>Soft on your Mac, firm on junk. Nothing you actually need gets bopped.</p></div>
+        <div class="callout"><h3>One bop.</h3><p>One click, one swipe. Or use Bop All to clear the whole desk, automatically.</p></div>
+      </div>
+      <img class="hero-cat" src="assets/hero.webp" alt="UTUVO Paw cat" width="870" height="900">
+      <div class="callouts r">
+        <div class="callout"><h3>Built to pounce.</h3><p>Rebuilt with the fluidity, agility and smoothness of a cat landing on its feet. Every time.</p></div>
+        <div class="callout"><h3>The tail.</h3><p>Purely for style. Classic tabby, or pick one of the new coats to bop in style.</p></div>
+        <div class="callout"><h3>Fits your lap.</h3><p>Manageable recoil, instant mouse aiming, and a purr when the job is done.</p></div>
+      </div>
+    </div>
+  </div>
+  <svg class="wave pink" viewBox="0 0 1440 70" preserveAspectRatio="none" style="position:absolute;left:0;bottom:-1px" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
+</section>
+
+<!-- ============ NINE LIVES ============ -->
+<section class="pinkbg sec">
+  <div class="wrap">
+    <h2 class="big">Nine lives of <span class="b">love.</span></h2>
+    <p class="legacy">Cats have been knocking things off desks since <strong>forever</strong>. We simply gave them a Mac. Here is what the <strong>testing cats</strong> had to say.</p>
+    <div class="quotes">
+      <div class="q" style="--tilt:-1.2deg"><p>"Finally an uninstaller that respects the paw."</p><div class="who"><img src="assets/cat1.webp" alt="" width="200" height="200">Mochi, 4</div></div>
+      <div class="q" style="--tilt:.8deg"><p>"I bopped 23 apps before breakfast. Then I had breakfast. Then I bopped two more."</p><div class="who"><img src="assets/cat2.webp" alt="" width="200" height="200">Tofu, 2</div></div>
+      <div class="q" style="--tilt:-.6deg"><p>"Meow."</p><div class="who"><img src="assets/cat3.webp" alt="" width="200" height="200">Butter, 11</div></div>
+      <div class="q" style="--tilt:1.1deg"><p>"The whiskers found a plist my human didn't even know existed. Typical human."</p><div class="who"><img src="assets/cat4.webp" alt="" width="200" height="200">Pudding, 6</div></div>
+      <div class="q" style="--tilt:-.9deg"><p>"Bop All is my favourite button. It is also my only button."</p><div class="who"><img src="assets/cat5.webp" alt="" width="200" height="200">Nori, 3</div></div>
+      <div class="q" style="--tilt:.5deg"><p>"Always one of the first things I install on a new Mac. Right after sitting on the keyboard."</p><div class="who"><img src="assets/cat6.webp" alt="" width="200" height="200">Sesame, 8</div></div>
+      <div class="q" style="--tilt:-1.4deg"><p>"Purrs when done. I purr when done. We are the same."</p><div class="who"><img src="assets/cat7.webp" alt="" width="200" height="200">Miso, 5</div></div>
+      <div class="q" style="--tilt:.9deg"><p>"Soft on the Mac, firm on the junk. Same as my policy on the sofa."</p><div class="who"><img src="assets/cat8.webp" alt="" width="200" height="200">Dumpling, 7</div></div>
+      <div class="q" style="--tilt:-.4deg"><p>"10/10 would knock things off the desk again."</p><div class="who"><img src="assets/cat9.webp" alt="" width="200" height="200">Bean, 1</div></div>
+    </div>
+  </div>
+  <svg class="wave night" viewBox="0 0 1440 70" preserveAspectRatio="none" style="position:absolute;left:0;bottom:-1px" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="logo"><h1>utuvo<span>paw</span></h1></div>
+    <div class="app-icon"><img src="assets/logo.webp" alt="" width="756" height="800"></div>
+    <div class="cta" id="try">
+      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>Download</a>
+      <a class="btn btn-buy" href="https://github.com/mickyyang-1407/utuvo-paw"><svg aria-hidden="true"><use href="#star"/></svg>GitHub</a>
+      <a class="btn btn-help" href="https://github.com/mickyyang-1407/utuvo-paw/issues"><svg aria-hidden="true"><use href="#heart"/></svg>Help</a>
+    </div>
+    <div class="meta"><span>© 2026 UTUVO · MIT License</span><span>Made with paws in Taipei</span><span>No apps were harmed. Slightly bopped.</span></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var dojo=document.getElementById('dojo'),targets=document.getElementById('targets'),ninja=document.getElementById('ninja'),
+      hint=document.getElementById('hint'),score=document.getElementById('score'),clearEl=document.getElementById('clear'),
+      apps=[['📎','Cliply','#7C6BFF,#B7A4FF'],['🍞','Toastr','#FF8A5B,#FFC56B'],['🔍','Zoomly','#3FC3A0,#9FE3C9'],['☁️','Cloudz','#5BA8FF,#A7D4FF'],['🔔','Dingo','#FF6B8B,#FFB3C6'],['🎛️','Knobz','#F5A05A,#FFD39B'],['📼','Tapey','#A78BFA,#F0ABFC']],
+      spots=[[8,14],[26,34],[44,10],[62,30],[80,12],[18,58],[70,58]],
+      n=0,busy=false,whoosh=null,hit=null;
+  try{whoosh=new Audio('assets/whoosh.wav');hit=new Audio('assets/hit.wav');whoosh.volume=.5;hit.volume=.6}catch(e){}
+  function play(a){if(!a)return;try{a.currentTime=0;a.play().catch(function(){})}catch(e){}}
+  function spawn(){
+    targets.innerHTML='';clearEl.classList.remove('show');
+    apps.forEach(function(a,i){
+      var t=document.createElement('button');t.className='target';t.type='button';t.setAttribute('aria-label','Bop '+a[1]);
+      t.style.left=spots[i][0]+'%';t.style.top=spots[i][1]+'%';t.style.background='linear-gradient(135deg,'+a[2]+')';
+      t.style.setProperty('--d',(6+i*0.7)+'s');t.style.setProperty('--o',(-i*1.3)+'s');t.style.setProperty('--dx',((i%2?-1:1)*(10+i*3))+'px');t.style.setProperty('--dy',((i%3?-1:1)*(12+i*2))+'px');
+      t.innerHTML='<span class="face">'+a[0]+'</span><span class="lab">'+a[1]+'</span><svg class="slash" viewBox="0 0 100 100" aria-hidden="true"><path d="M30 12 Q22 48 20 88"/><path d="M52 8 Q46 50 44 92"/><path d="M74 12 Q68 48 66 88"/></svg>';
+      t.addEventListener('click',function(){shoot(t)});targets.appendChild(t);
+    });
+  }
+  dojo.addEventListener('mousemove',function(e){
+    if(busy)return;var r=dojo.getBoundingClientRect();var x=(e.clientX-r.left)/r.width*2-1;ninja.style.setProperty('--lean',(x*9)+'deg');
+  });
+  function shoot(t){
+    if(busy||t.classList.contains('hit'))return;busy=true;hint.style.opacity=0;
+    var dr=dojo.getBoundingClientRect(),tr=t.getBoundingClientRect(),nr=ninja.getBoundingClientRect();
+    var ax=(tr.left+tr.width/2-dr.left)/dr.width*2-1;ninja.style.setProperty('--lean',(ax*-8)+'deg');
+    ninja.classList.add('windup');
+    setTimeout(function(){
+      ninja.classList.remove('windup');ninja.classList.add('throwing');ninja.style.setProperty('--lean',(ax*10)+'deg');play(whoosh);
+      var sx=nr.left-dr.left+nr.width*0.78,sy=nr.top-dr.top+nr.height*0.18;   // the raised paw of the back view
+      var s=document.createElement('img');s.className='star';s.src='assets/shuriken.webp';s.alt='';s.style.left=(sx-28)+'px';s.style.top=(sy-28)+'px';
+      s.style.setProperty('--tx',(tr.left+tr.width/2-dr.left-sx)+'px');s.style.setProperty('--ty',(tr.top+tr.height/2-dr.top-sy)+'px');
+      dojo.appendChild(s);void s.offsetWidth;s.classList.add('fly');
+      setTimeout(function(){
+        s.remove();t.classList.add('hit');play(hit);
+        for(var i=0;i<8;i++){var sh=document.createElement('span');sh.className='shard';sh.style.background=i%2?'#FFB3C6':'#fff';
+          var a=i/8*Math.PI*2;sh.style.setProperty('--x',Math.cos(a)*70+'px');sh.style.setProperty('--y',(Math.sin(a)*70+40)+'px');sh.style.setProperty('--r',(i*97)+'deg');t.appendChild(sh)}
+        var p=document.createElement('span');p.className='pop';p.textContent=['boop!','bop!','nyoom!','swish!'][n%4];t.appendChild(p);
+        n++;score.textContent=n+' bopped';
+        setTimeout(function(){t.style.visibility='hidden'},700);
+        if(targets.querySelectorAll('.target:not(.hit)').length===0){setTimeout(function(){clearEl.classList.add('show')},600);setTimeout(spawn,2600)}
+      },360);
+      setTimeout(function(){ninja.classList.remove('throwing');busy=false;ninja.style.setProperty('--lean','0deg')},520);
+    },180);
+  }
+  spawn();
+})();
+</script>
+
+</body>
+</html>
