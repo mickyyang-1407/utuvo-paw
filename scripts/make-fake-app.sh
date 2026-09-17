@@ -11,7 +11,7 @@ DEST="${1:-$HOME/Desktop}"
 L="$HOME/Library"
 if [[ "${1:-}" == "--clean" ]]; then
     rm -rf "$HOME/Desktop/$NAME.app" "$L"/*/"$ID"* "$L"/*/*/"$ID"* "$L/Logs/$NAME" "$L/Group Containers/group.$ID" \
-           "$L/Application Support/FakeCatToyPro" "$L/Caches/$ID.pro"
+           "$L/Application Support/FakeCatToyPro" "$L/Caches/${ID}pro"
     echo "🧹 cleaned"; exit 0
 fi
 APP="$DEST/$NAME.app"
@@ -76,10 +76,10 @@ cat > "$L/LaunchAgents/$ID.helper.plist" <<EOF
 EOF
 # decoys that must NOT be matched
 blob "$L/Application Support/FakeCatToyPro/x" 1
-blob "$L/Caches/$ID.pro/x" 1
+blob "$L/Caches/${ID}pro/x" 1   # no dot: "$ID.pro" would count as a child id of $ID, by design
 
 echo "✅ $APP"
 echo "leftovers planted:"
 ls -d "$L"/*/"$ID"* "$L"/*/*/"$ID"* "$L/Logs/$NAME" "$L/Group Containers/group.$ID" 2>/dev/null | sed "s|$HOME|~|"
-echo "decoys (should NOT appear): ~/Library/Application Support/FakeCatToyPro, ~/Library/Caches/$ID.pro"
+echo "decoys (should NOT appear): ~/Library/Application Support/FakeCatToyPro, ~/Library/Caches/${ID}pro"
 echo "cleanup of anything left: bash scripts/make-fake-app.sh --clean"
