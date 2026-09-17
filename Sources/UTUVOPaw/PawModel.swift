@@ -18,6 +18,7 @@ final class PawModel: ObservableObject {
     @Published var errorText: String?
     @Published var isDropTargeted = false
     @Published var needsFullDiskAccess = false
+    @Published var isOrphanMode = false
 
     private let scanner = LeftoverScanner()
 
@@ -31,6 +32,7 @@ final class PawModel: ObservableObject {
             let info = try AppInspector.inspect(url)
             app = info
             appIcon = NSWorkspace.shared.icon(forFile: url.path)
+            isOrphanMode = false
             phase = .scanning
             items = []
             Task.detached(priority: .userInitiated) { [scanner] in
@@ -46,6 +48,28 @@ final class PawModel: ObservableObject {
             }
         } catch {
             errorText = error.localizedDescription
+        }
+    }
+
+    /// "Find orphans": leftovers whose app is no longer installed anywhere LaunchServices knows.
+    func loadOrphans() {
+        errorText = nil
+        app = AppInfo(url: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library"),
+                      name: "Orphaned leftovers", bundleID: nil, executableName: nil, version: nil)
+        appIcon = nil
+        isOrphanMode = true
+        phase = .scanning
+        items = []
+        Task.detached(priority: .userInitiated) { [scanner] in
+            let found = scanner.scanOrphans()
+            await MainActor.run { self.items = found; self.phase = found.isEmpty ? .idle : .results; if found.isEmpty { self.errorText = "No orphans. The desk is clean." } }
+            for item in found {
+                let url = item.url
+                let size = scanner.measure(url)
+                await MainActor.run {
+                    if let idx = self.items.firstIndex(where: { $0.url == url }) { self.items[idx].size = size }
+                }
+            }
         }
     }
 
@@ -85,6 +109,7 @@ final class PawModel: ObservableObject {
         items = []
         result = nil
         errorText = nil
+        isOrphanMode = false
     }
 
     func chooseApp() {

@@ -1,11 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="UTUVO Paw — the free, open-source macOS uninstaller with paws. Drop an app in, the cat finds every leftover file and throws it in the Trash.">
-<meta property="og:title" content="UTUVO Paw"><meta property="og:description" content="UTUVO Paw — the free, open-source macOS uninstaller with paws. Drop an app in, the cat finds every leftover file and throws it in the Trash."><meta property="og:image" content="https://mickyyang-1407.github.io/utuvo-paw/assets/og.png"><meta name="twitter:card" content="summary_large_image">
-<link rel="alternate" hreflang="en" href="https://mickyyang-1407.github.io/utuvo-paw/"><link rel="alternate" hreflang="zh-Hant" href="https://mickyyang-1407.github.io/utuvo-paw/zh/">
-<link rel="icon" href="assets/logo.webp">
 <meta charset="utf-8">
 <title>UTUVO Paw</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -193,8 +185,7 @@
     *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   }
 </style>
-</head>
-<body>
+
 <!-- ============ SVG symbols ============ -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -207,7 +198,7 @@
 </svg>
 
 <!-- ============ HERO ============ -->
-<nav class="lang" aria-label="Language"><a href="./" data-lang="en" aria-current="page">EN</a><a href="zh/" data-lang="zh">中文</a></nav>
+<nav class="lang" aria-label="Language"><a href="./" data-lang="en">EN</a><a href="zh/" data-lang="zh">中文</a></nav>
 <section class="hero">
   <div class="stars" aria-hidden="true">
     <i style="left:8%;top:12%"></i><i style="left:18%;top:40%;animation-delay:.7s"></i><i style="left:30%;top:8%;animation-delay:1.4s"></i>
@@ -401,11 +392,5 @@
   }
   spawn();
 })();
-
-document.querySelectorAll('.lang a').forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('paw-lang',a.dataset.lang)}catch(e){}})});
-try{if(!localStorage.getItem('paw-lang')&&/^zh/i.test(navigator.language)){location.replace('zh/')}}catch(e){}
 </script>
 
-
-</body>
-</html>

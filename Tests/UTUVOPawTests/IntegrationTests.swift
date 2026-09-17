@@ -64,3 +64,43 @@ final class IntegrationTests: XCTestCase {
         }
     }
 }
+
+final class OrphanTests: XCTestCase {
+    func testBundleIDParsing() {
+        XCTAssertEqual(Orphans.bundleID(fromName: "com.acme.cliply.plist"), "com.acme.cliply")
+        XCTAssertEqual(Orphans.bundleID(fromName: "group.com.acme.cliply"), "com.acme.cliply")
+        XCTAssertEqual(Orphans.bundleID(fromName: "com.acme.cliply.savedState"), "com.acme.cliply")
+        XCTAssertEqual(Orphans.bundleID(fromName: "com.acme.cliply.A46A35B6-8034-45C9-9862-60E375058B86.plist"), "com.acme.cliply")
+        XCTAssertEqual(Orphans.bundleID(fromName: "com.acme.cliply.helper"), "com.acme.cliply.helper")
+        XCTAssertNil(Orphans.bundleID(fromName: "Fake Cat Toy"))
+        XCTAssertNil(Orphans.bundleID(fromName: "Adobe"))
+        XCTAssertNil(Orphans.bundleID(fromName: "com.acme"))
+        XCTAssertNil(Orphans.bundleID(fromName: "1.2.3"))
+        XCTAssertTrue(Orphans.isProtected("com.apple.finder"))
+    }
+
+    /// Plant a leftover for an id no app owns → it must be found; the Finder's own prefs must not.
+    func testRealOrphanScan() throws {
+        let fm = FileManager.default
+        let lib = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library")
+        let id = "com.utuvo.orphan-xctest"
+        let planted = lib.appendingPathComponent("Caches/\(id)")
+        try fm.createDirectory(at: planted, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: planted) }
+        let found = LeftoverScanner().scanOrphans()
+        let paths = found.map { $0.url.standardizedFileURL.path }
+        XCTAssertTrue(paths.contains(planted.standardizedFileURL.path), "planted orphan not found")
+        XCTAssertFalse(found.contains { $0.url.lastPathComponent.lowercased().hasPrefix("com.apple.") }, "Apple files must never be orphans")
+        XCTAssertFalse(found.contains { $0.category == .launch }, "launch agents must never be guessed")
+        XCTAssertFalse(found.contains { $0.url.path.contains("/Group Containers/") }, "shared group containers must never be guessed")
+        let installed = LeftoverScanner().installedBundleIDs()
+        XCTAssertTrue(installed.contains("com.apple.finder") || installed.contains("com.apple.safari"), "installed id set is empty")
+        var c2: [String: Bool] = [:]
+        XCTAssertTrue(LeftoverScanner().isInstalled("com.apple.safari.web-extension", cache: &c2, installed: ["com.apple.safari"]))
+        // an id LaunchServices knows (this very app's build, or any installed app) is never an orphan
+        var cache: [String: Bool] = [:]
+        XCTAssertTrue(LeftoverScanner().isInstalled("com.apple.finder", cache: &cache))
+        XCTAssertTrue(LeftoverScanner().isInstalled("com.apple.finder.helper.deep", cache: &cache))
+        XCTAssertFalse(LeftoverScanner().isInstalled(id, cache: &cache))
+    }
+}

@@ -66,6 +66,11 @@ struct DropZone: View {
 
             HStack(spacing: 12) {
                 Button("Choose app…") { model.chooseApp() }.buttonStyle(GhostButtonStyle())
+                Button {
+                    model.loadOrphans()
+                } label: { Label("Find orphans", systemImage: "questionmark.folder") }
+                    .buttonStyle(GhostButtonStyle())
+                    .help("Leftovers named after a bundle id that no installed app owns. Apple's own files and launch agents are never guessed.")
                 if !Trasher.hasFullDiskAccess {
                     Button {
                         Trasher.openFullDiskAccessSettings()
@@ -74,7 +79,7 @@ struct DropZone: View {
                         .help("Without it the cat can list but not remove ~/Library/Containers and similar protected folders.")
                 }
                 if let e = model.errorText {
-                    Text(e).font(Paw.font(12, .semibold)).foregroundStyle(Paw.roseDark)
+                    Text(e).font(Paw.font(12, .semibold)).foregroundStyle(e.hasPrefix("No orphans") ? Paw.mint : Paw.roseDark)
                 }
             }
             .padding(.bottom, 20)
@@ -223,9 +228,11 @@ struct ResultsView: View {
     var header: some View {
         HStack(spacing: 14) {
             if let icon = model.appIcon { Image(nsImage: icon).resizable().frame(width: 48, height: 48) }
+            else { Paw.image("loaf").resizable().scaledToFit().frame(width: 56, height: 48) }
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.app?.name ?? "").font(Paw.display(21)).foregroundStyle(Paw.ink)
                 HStack(spacing: 6) {
+                    if model.isOrphanMode { Text("files whose app is gone · launch agents never guessed") }
                     if let v = model.app?.version { Text("v\(v)") }
                     if let id = model.app?.bundleID { Text(id) }
                 }

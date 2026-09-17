@@ -126,6 +126,110 @@ final class LeftoverScanner {
     }
 }
 
+// MARK: - Orphans: leftovers whose app is gone
+
+enum Orphans {
+    /// Pulls a reverse-DNS bundle id out of a file name, or nil when the name is not id-shaped.
+    /// "com.acme.cliply.plist" → com.acme.cliply; "group.com.acme.cliply" → com.acme.cliply;
+    /// "com.acme.cliply.1F2E-…-UUID.plist" → com.acme.cliply; "Fake Cat Toy" → nil.
+    static func bundleID(fromName name: String) -> String? {
+        var n = name
+        for ext in [".plist", ".savedState", ".binarycookies", ".log"] where n.lowercased().hasSuffix(ext.lowercased()) {
+            n = String(n.dropLast(ext.count))
+        }
+        if n.lowercased().hasPrefix("group.") { n = String(n.dropFirst(6)) }
+        var parts = n.split(separator: ".").map(String.init)
+        // drop trailing UUID / hex / numeric segments (ByHost, versions)
+        while let last = parts.last, parts.count > 3,
+              last.range(of: "^[0-9A-Fa-f-]{8,}$", options: .regularExpression) != nil || last.range(of: "^[0-9]+$", options: .regularExpression) != nil {
+            parts.removeLast()
+        }
+        guard parts.count >= 3 else { return nil }
+        for p in parts where p.range(of: "^[A-Za-z0-9_-]+$", options: .regularExpression) == nil { return nil }
+        guard parts[0].range(of: "^[A-Za-z]{2,}$", options: .regularExpression) != nil else { return nil }   // com / org / io / net…
+        return parts.joined(separator: ".")
+    }
+
+    /// Ids we never call orphans: Apple's own, and us.
+    static func isProtected(_ id: String) -> Bool {
+        let l = id.lowercased()
+        return l.hasPrefix("com.apple.") || l == "com.utuvo.paw"
+    }
+}
+
+extension LeftoverScanner {
+    /// Roots worth guessing in. Launch agents are deliberately left out: a plist there may be a
+    /// live agent for something that is not an .app, and guessing wrong would break it.
+    var orphanRoots: [Root] {
+        roots.filter { !$0.needsAdmin && $0.category != .launch && $0.url.lastPathComponent != "Group Containers" }
+    }
+
+    /// Bundle ids of every app in the usual folders, plus their embedded app extensions and login
+    /// items. Second opinion next to LaunchServices, which only knows what Finder has seen.
+    func installedBundleIDs() -> Set<String> {
+        var ids = Set<String>()
+        func id(of bundle: URL) {
+            let plist = bundle.appendingPathComponent("Contents/Info.plist")
+            if let d = try? Data(contentsOf: plist),
+               let p = try? PropertyListSerialization.propertyList(from: d, options: [], format: nil) as? [String: Any],
+               let b = p["CFBundleIdentifier"] as? String { ids.insert(b.lowercased()) }
+            for sub in ["Contents/PlugIns", "Contents/Library/LoginItems", "Contents/Helpers", "Contents/Frameworks"] {
+                let dir = bundle.appendingPathComponent(sub)
+                for c in ((try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [])
+                    where ["appex", "app", "xpc"].contains(c.pathExtension.lowercased()) { id(of: c) }
+            }
+        }
+        let folders = ["/Applications", "/Applications/Utilities", "/System/Applications", "/System/Applications/Utilities",
+                       home.appendingPathComponent("Applications").path, "/Library/CoreServices", "/System/Library/CoreServices"]
+        for f in folders {
+            for c in ((try? fm.contentsOfDirectory(at: URL(fileURLWithPath: f), includingPropertiesForKeys: nil)) ?? []) {
+                if c.pathExtension.lowercased() == "app" { id(of: c) }
+                else if (try? c.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true, f == "/Applications" {
+                    for cc in ((try? fm.contentsOfDirectory(at: c, includingPropertiesForKeys: nil)) ?? []) where cc.pathExtension.lowercased() == "app" { id(of: cc) }
+                }
+            }
+        }
+        return ids
+    }
+
+    /// LaunchServices knows every app Finder has ever seen. If it can't find an app for the id or
+    /// any parent id (com.acme.cliply.helper → com.acme.cliply), nothing owns this file.
+    func isInstalled(_ id: String, cache: inout [String: Bool], installed: Set<String> = []) -> Bool {
+        let lower = id.lowercased()
+        // exact or "owned by a parent id": com.acme.cliply.helper is owned by com.acme.cliply
+        for known in installed where lower == known || lower.hasPrefix(known + ".") { return true }
+        var parts = id.split(separator: ".").map(String.init)
+        while parts.count >= 2 {
+            let candidate = parts.joined(separator: ".")
+            if let hit = cache[candidate] { if hit { return true } }
+            else {
+                let found = NSWorkspace.shared.urlForApplication(withBundleIdentifier: candidate) != nil
+                cache[candidate] = found
+                if found { return true }
+            }
+            parts.removeLast()
+        }
+        return false
+    }
+
+    /// Everything under the user Library that is named after a bundle id no installed app owns.
+    func scanOrphans() -> [Leftover] {
+        var cache: [String: Bool] = [:]
+        let installed = installedBundleIDs()
+        var found: [URL: Leftover] = [:]
+        for root in orphanRoots {
+            guard let children = try? fm.contentsOfDirectory(at: root.url, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { continue }
+            for child in children {
+                guard let id = Orphans.bundleID(fromName: child.lastPathComponent), !Orphans.isProtected(id) else { continue }
+                if isInstalled(id, cache: &cache, installed: installed) { continue }
+                let isDir = (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+                found[child.standardizedFileURL] = Leftover(url: child, category: root.category, isDirectory: isDir, needsAdmin: false)
+            }
+        }
+        return found.values.sorted { ($0.category, $0.url.path) < ($1.category, $1.url.path) }
+    }
+}
+
 /// Moves things to the Trash. Never deletes permanently.
 enum Trasher {
     struct NeedsFullDiskAccess: LocalizedError {

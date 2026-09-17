@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="UTUVO Paw — the free, open-source macOS uninstaller with paws. Drop an app in, the cat finds every leftover file and throws it in the Trash.">
-<meta property="og:title" content="UTUVO Paw"><meta property="og:description" content="UTUVO Paw — the free, open-source macOS uninstaller with paws. Drop an app in, the cat finds every leftover file and throws it in the Trash."><meta property="og:image" content="https://mickyyang-1407.github.io/utuvo-paw/assets/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="UTUVO Paw——免費開源、有貓掌的 macOS 解除安裝器。把 app 丟進來，貓找出每一個殘留檔，然後丟進垃圾桶。">
+<meta property="og:title" content="UTUVO Paw"><meta property="og:description" content="UTUVO Paw——免費開源、有貓掌的 macOS 解除安裝器。把 app 丟進來，貓找出每一個殘留檔，然後丟進垃圾桶。"><meta property="og:image" content="https://mickyyang-1407.github.io/utuvo-paw/assets/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="alternate" hreflang="en" href="https://mickyyang-1407.github.io/utuvo-paw/"><link rel="alternate" hreflang="zh-Hant" href="https://mickyyang-1407.github.io/utuvo-paw/zh/">
-<link rel="icon" href="assets/logo.webp">
+<link rel="icon" href="../assets/logo.webp">
 <meta charset="utf-8">
 <title>UTUVO Paw</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
     --ink:#3B2A3E; --ink-soft:#6E5A72; --milk:#FFFDF8; --star:#FFE6A3; --mint:#9FE3C9;
     --shadow:0 12px 30px rgba(58,32,60,.18);
     --display:"Fredoka","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;
-    --body:"Nunito","Helvetica Neue",Arial,sans-serif;
+    --body:"Nunito","PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--night);color:var(--milk);font-family:var(--body);font-size:17px;line-height:1.55;overflow-x:hidden}
@@ -121,7 +121,7 @@
   /* ---------- section: pink ---------- */
   .pinkbg{background:var(--pink);color:var(--ink)}
   .sec{padding-block:64px 88px}
-  .big{font-size:clamp(2.4rem,7vw,4.4rem);font-weight:600;text-transform:uppercase;letter-spacing:.045em;text-align:center}
+  .big{font-family:var(--body);font-weight:800;font-size:clamp(2rem,6vw,3.6rem);font-weight:600;text-transform:uppercase;letter-spacing:.045em;text-align:center}
   .big .b{color:var(--rose-dark)}
   .lede{max-width:640px;margin:22px auto 0;text-align:center;font-size:clamp(1.05rem,2.2vw,1.3rem);font-weight:700}
   .lede strong{font-weight:800;font-style:italic}
@@ -207,7 +207,7 @@
 </svg>
 
 <!-- ============ HERO ============ -->
-<nav class="lang" aria-label="Language"><a href="./" data-lang="en" aria-current="page">EN</a><a href="zh/" data-lang="zh">中文</a></nav>
+<nav class="lang" aria-label="Language"><a href="../" data-lang="en">EN</a><a href="./" data-lang="zh" aria-current="page">中文</a></nav>
 <section class="hero">
   <div class="stars" aria-hidden="true">
     <i style="left:8%;top:12%"></i><i style="left:18%;top:40%;animation-delay:.7s"></i><i style="left:30%;top:8%;animation-delay:1.4s"></i>
@@ -216,29 +216,29 @@
   </div>
   <div class="wrap">
     <div class="logo">
-      <img class="logo-cat" src="assets/logo.webp" alt="" width="756" height="800">
+      <img class="logo-cat" src="../assets/logo.webp" alt="" width="756" height="800">
       <h1>utuvo<span>paw</span></h1>
     </div>
-    <p class="tagline">The uninstaller with <em>paws</em>. Drop an app in. The cat finds every leftover. Then it throws things.</p>
+    <p class="tagline">有<em>貓掌</em>的解除安裝器。把 app 丟進來，貓幫你找出每一個殘留檔，然後把它們丟出去。</p>
     <div class="cta">
-      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>Download</a>
+      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>下載</a>
       <a class="btn btn-buy" href="https://github.com/mickyyang-1407/utuvo-paw"><svg aria-hidden="true"><use href="#star"/></svg>GitHub</a>
     </div>
-    <p class="free">Free. Open source. MIT licensed. No fish required.</p>
+    <p class="free">免費・開源・MIT 授權・不用付小魚乾</p>
 
-    <div class="dojo" id="dojo" aria-label="Playable demo: click an app to throw a shuriken at it">
+    <div class="dojo" id="dojo" aria-label="可玩的示範：點一個 app，貓會丟手裡劍">
       <div class="moon" aria-hidden="true"></div>
       <div class="floor" aria-hidden="true"></div>
-      <div class="hint" id="hint">Click an app · the cat does the rest</div>
+      <div class="hint" id="hint">點一個 app・剩下交給貓</div>
       <div class="targets" id="targets"></div>
       <div class="ninja" id="ninja" aria-hidden="true">
         <div class="card">
-          <img class="front" src="assets/ninja.webp" alt="" width="720" height="647">
-          <img class="back" src="assets/ninja-back.webp" alt="" width="720" height="681">
+          <img class="front" src="../assets/ninja.webp" alt="" width="720" height="647">
+          <img class="back" src="../assets/ninja-back.webp" alt="" width="720" height="681">
         </div>
       </div>
-      <div class="clear" id="clear">desk clear 🐾</div>
-      <div class="score" id="score">0 bopped</div>
+      <div class="clear" id="clear">桌面清空 🐾</div>
+      <div class="score" id="score">拍飛 0 個</div>
     </div>
   </div>
   <svg class="wave pink" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
@@ -247,52 +247,52 @@
 <!-- ============ DRAG. DROP. BOOP. ============ -->
 <section class="pinkbg sec">
   <div class="wrap">
-    <h2 class="big">Drag. Drop. <span class="b">Boop.</span></h2>
-    <p class="lede">The most huggable uninstaller for macOS. Drag in any app and UTUVO Paw <strong>sniffs out every leftover file</strong> — caches, preferences, support folders. Then a <strong>real cat paw</strong> knocks them all off the desk. Because that's what cats do.</p>
+    <h2 class="big">拖・放・<span class="b">拍飛。</span></h2>
+    <p class="lede">macOS 上最想抱的解除安裝器。把任何 app 拖進來，UTUVO Paw 會<strong>嗅出每一個殘留檔</strong>——快取、偏好設定、支援資料夾。然後一隻<strong>真的貓掌</strong>把它們全部推下桌。因為貓就是這樣。</p>
 
     <div class="flow">
       <div>
         <div class="card-win">
           <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">UTUVO Paw</span></div>
           <div class="body">
-            <div class="drop" style="margin:0;height:160px"><div class="hint"><svg aria-hidden="true"><use href="#pawprint" fill="currentColor"/></svg>Drop apps here</div></div>
-            <img class="cat-corner" style="right:18px;bottom:14px" src="assets/loaf.webp" alt="" width="600" height="461">
+            <div class="drop" style="margin:0;height:160px"><div class="hint"><svg aria-hidden="true"><use href="#pawprint" fill="currentColor"/></svg>把 app 丟到這裡</div></div>
+            <img class="cat-corner" style="right:18px;bottom:14px" src="../assets/loaf.webp" alt="" width="600" height="461">
           </div>
         </div>
-        <p class="step">1. Drop an app<small>The cat is napping. For now.</small></p>
+        <p class="step">1. 丟一個 app 進來<small>貓還在睡。暫時。</small></p>
       </div>
       <div style="position:relative">
         <svg class="arrow a1" viewBox="0 0 60 40" aria-hidden="true"><use href="#arrow"/></svg>
         <div class="card-win">
-          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">Cliply — 7 things found</span></div>
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">Cliply — 找到 7 樣東西</span></div>
           <div class="body">
             <div class="files">
               <div class="file app"><b>📎</b>Cliply.app</div>
               <div class="file"><b>📄</b>com.cliply.plist</div>
               <div class="file"><b>📁</b>App Support</div>
               <div class="file"><b>🗂️</b>Caches</div>
-              <div class="file"><b>📄</b>Login item</div>
+              <div class="file"><b>📄</b>登入項目</div>
               <div class="file"><b>🍪</b>Cookies</div>
             </div>
-            <span class="zap-all">Bop All 🐾</span>
+            <span class="zap-all">全部拍飛 🐾</span>
           </div>
         </div>
-        <p class="step">2. Whiskers find everything<small>Nothing hides from a cat.</small></p>
+        <p class="step">2. 鬍鬚找出所有東西<small>沒有東西躲得過貓。</small></p>
       </div>
       <div style="position:relative">
         <svg class="arrow a2" viewBox="0 0 60 40" aria-hidden="true"><use href="#arrow"/></svg>
         <div class="card-win">
-          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">bye bye</span></div>
+          <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="ttl">掰掰</span></div>
           <div class="tumble" aria-hidden="true">
             <span class="t" style="left:18%;--dx:-30px;--rot:-260deg;animation-delay:0s">📎</span>
             <span class="t" style="left:34%;--dx:20px;--rot:400deg;animation-delay:.5s">📄</span>
             <span class="t" style="left:50%;--dx:-10px;--rot:-180deg;animation-delay:.9s">📁</span>
             <span class="t" style="left:64%;--dx:36px;--rot:300deg;animation-delay:1.3s">🗂️</span>
             <span class="t" style="left:26%;--dx:14px;--rot:-330deg;animation-delay:1.8s">🍪</span>
-            <img class="pushcat" src="assets/push.webp" alt="" width="800" height="611">
+            <img class="pushcat" src="../assets/push.webp" alt="" width="800" height="611">
           </div>
         </div>
-        <p class="step">3. Off the desk<small>Gone. Completely. Purr.</small></p>
+        <p class="step">3. 推下桌<small>沒了。徹底。呼嚕。</small></p>
       </div>
     </div>
   </div>
@@ -302,18 +302,18 @@
 <!-- ============ READY. AIM. BOOP. ============ -->
 <section class="nightbg sec" style="padding-top:40px">
   <div class="wrap">
-    <h2 class="big">Ready. <span class="b">Aim.</span> Boop.</h2>
+    <h2 class="big">預備・<span class="b">瞄準・</span>拍飛。</h2>
     <div class="anatomy">
       <div class="callouts l">
-        <div class="callout"><h3>The whiskers.</h3><p>Sniff out every leftover an app drops on your Mac. Caches, preferences, support files — target locked.</p></div>
-        <div class="callout"><h3>Toe beans.</h3><p>Soft on your Mac, firm on junk. Nothing you actually need gets bopped.</p></div>
-        <div class="callout"><h3>One bop.</h3><p>One click, one swipe. Or use Bop All to clear the whole desk, automatically.</p></div>
+        <div class="callout"><h3>鬍鬚。</h3><p>嗅出 app 留在 Mac 上的每一個殘留。快取、偏好設定、支援檔——目標鎖定。</p></div>
+        <div class="callout"><h3>肉球。</h3><p>對 Mac 溫柔，對垃圾狠。你真正需要的東西不會被拍。</p></div>
+        <div class="callout"><h3>一拍。</h3><p>點一下、拍一下。或者按「全部拍飛」讓貓自己清桌。</p></div>
       </div>
-      <img class="hero-cat" src="assets/hero.webp" alt="UTUVO Paw cat" width="870" height="900">
+      <img class="hero-cat" src="../assets/hero.webp" alt="UTUVO Paw cat" width="870" height="900">
       <div class="callouts r">
-        <div class="callout"><h3>Built to pounce.</h3><p>Rebuilt with the fluidity, agility and smoothness of a cat landing on its feet. Every time.</p></div>
-        <div class="callout"><h3>The tail.</h3><p>Purely for style. Classic tabby, or pick one of the new coats to bop in style.</p></div>
-        <div class="callout"><h3>Fits your lap.</h3><p>Manageable recoil, instant mouse aiming, and a purr when the job is done.</p></div>
+        <div class="callout"><h3>天生會撲。</h3><p>像貓落地一樣流暢、敏捷、穩。每一次。</p></div>
+        <div class="callout"><h3>尾巴。</h3><p>純粹好看。經典虎斑，或換一件新毛色帥氣地拍。</p></div>
+        <div class="callout"><h3>剛好一個大腿。</h3><p>後座力可控、滑鼠即時瞄準，做完還會呼嚕。</p></div>
       </div>
     </div>
   </div>
@@ -323,18 +323,18 @@
 <!-- ============ NINE LIVES ============ -->
 <section class="pinkbg sec">
   <div class="wrap">
-    <h2 class="big">Nine lives of <span class="b">love.</span></h2>
-    <p class="legacy">Cats have been knocking things off desks since <strong>forever</strong>. We simply gave them a Mac. Here is what the <strong>testing cats</strong> had to say.</p>
+    <h2 class="big">九條命的<span class="b">愛。</span></h2>
+    <p class="legacy">貓從<strong>有史以來</strong>就在把東西推下桌。我們只是給了牠們一台 Mac。以下是<strong>測試貓</strong>的評語。</p>
     <div class="quotes">
-      <div class="q" style="--tilt:-1.2deg"><p>"Finally an uninstaller that respects the paw."</p><div class="who"><img src="assets/cat1.webp" alt="" width="200" height="200">Mochi, 4</div></div>
-      <div class="q" style="--tilt:.8deg"><p>"I bopped 23 apps before breakfast. Then I had breakfast. Then I bopped two more."</p><div class="who"><img src="assets/cat2.webp" alt="" width="200" height="200">Tofu, 2</div></div>
-      <div class="q" style="--tilt:-.6deg"><p>"Meow."</p><div class="who"><img src="assets/cat3.webp" alt="" width="200" height="200">Butter, 11</div></div>
-      <div class="q" style="--tilt:1.1deg"><p>"The whiskers found a plist my human didn't even know existed. Typical human."</p><div class="who"><img src="assets/cat4.webp" alt="" width="200" height="200">Pudding, 6</div></div>
-      <div class="q" style="--tilt:-.9deg"><p>"Bop All is my favourite button. It is also my only button."</p><div class="who"><img src="assets/cat5.webp" alt="" width="200" height="200">Nori, 3</div></div>
-      <div class="q" style="--tilt:.5deg"><p>"Always one of the first things I install on a new Mac. Right after sitting on the keyboard."</p><div class="who"><img src="assets/cat6.webp" alt="" width="200" height="200">Sesame, 8</div></div>
-      <div class="q" style="--tilt:-1.4deg"><p>"Purrs when done. I purr when done. We are the same."</p><div class="who"><img src="assets/cat7.webp" alt="" width="200" height="200">Miso, 5</div></div>
-      <div class="q" style="--tilt:.9deg"><p>"Soft on the Mac, firm on the junk. Same as my policy on the sofa."</p><div class="who"><img src="assets/cat8.webp" alt="" width="200" height="200">Dumpling, 7</div></div>
-      <div class="q" style="--tilt:-.4deg"><p>"10/10 would knock things off the desk again."</p><div class="who"><img src="assets/cat9.webp" alt="" width="200" height="200">Bean, 1</div></div>
+      <div class="q" style="--tilt:-1.2deg"><p>「終於有一個尊重貓掌的解除安裝器。」</p><div class="who"><img src="../assets/cat1.webp" alt="" width="200" height="200">麻糬・4 歲</div></div>
+      <div class="q" style="--tilt:.8deg"><p>「早餐前拍飛了 23 個 app。然後吃早餐。然後再拍兩個。」</p><div class="who"><img src="../assets/cat2.webp" alt="" width="200" height="200">豆腐・2 歲</div></div>
+      <div class="q" style="--tilt:-.6deg"><p>「喵。」</p><div class="who"><img src="../assets/cat3.webp" alt="" width="200" height="200">奶油・11 歲</div></div>
+      <div class="q" style="--tilt:1.1deg"><p>「鬍鬚找到一個我的人類根本不知道存在的 plist。人類就這樣。」</p><div class="who"><img src="../assets/cat4.webp" alt="" width="200" height="200">布丁・6 歲</div></div>
+      <div class="q" style="--tilt:-.9deg"><p>「『全部拍飛』是我最愛的按鈕。也是我唯一的按鈕。」</p><div class="who"><img src="../assets/cat5.webp" alt="" width="200" height="200">海苔・3 歲</div></div>
+      <div class="q" style="--tilt:.5deg"><p>「新 Mac 第一批裝的東西。就在坐上鍵盤之後。」</p><div class="who"><img src="../assets/cat6.webp" alt="" width="200" height="200">芝麻・8 歲</div></div>
+      <div class="q" style="--tilt:-1.4deg"><p>「做完會呼嚕。我做完也呼嚕。我們是一樣的。」</p><div class="who"><img src="../assets/cat7.webp" alt="" width="200" height="200">味噌・5 歲</div></div>
+      <div class="q" style="--tilt:.9deg"><p>「對 Mac 溫柔、對垃圾狠。跟我對沙發的政策一樣。」</p><div class="who"><img src="../assets/cat8.webp" alt="" width="200" height="200">水餃・7 歲</div></div>
+      <div class="q" style="--tilt:-.4deg"><p>「10/10，還會再把東西推下桌。」</p><div class="who"><img src="../assets/cat9.webp" alt="" width="200" height="200">豆豆・1 歲</div></div>
     </div>
   </div>
   <svg class="wave night" viewBox="0 0 1440 70" preserveAspectRatio="none" style="position:absolute;left:0;bottom:-1px" aria-hidden="true"><path d="M0 40 C120 0 200 70 340 40 C480 10 560 70 720 40 C880 10 960 70 1100 40 C1240 10 1320 60 1440 30 L1440 70 L0 70Z"/></svg>
@@ -344,13 +344,13 @@
 <footer>
   <div class="wrap">
     <div class="logo"><h1>utuvo<span>paw</span></h1></div>
-    <div class="app-icon"><img src="assets/logo.webp" alt="" width="756" height="800"></div>
+    <div class="app-icon"><img src="../assets/logo.webp" alt="" width="756" height="800"></div>
     <div class="cta" id="try">
-      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>Download</a>
+      <a class="btn btn-try" href="https://github.com/mickyyang-1407/utuvo-paw/releases/latest"><svg aria-hidden="true"><use href="#pawprint"/></svg>下載</a>
       <a class="btn btn-buy" href="https://github.com/mickyyang-1407/utuvo-paw"><svg aria-hidden="true"><use href="#star"/></svg>GitHub</a>
-      <a class="btn btn-help" href="https://github.com/mickyyang-1407/utuvo-paw/issues"><svg aria-hidden="true"><use href="#heart"/></svg>Help</a>
+      <a class="btn btn-help" href="https://github.com/mickyyang-1407/utuvo-paw/issues"><svg aria-hidden="true"><use href="#heart"/></svg>求助</a>
     </div>
-    <div class="meta"><span>© 2026 UTUVO · MIT License</span><span>Made with paws in Taipei</span><span>No apps were harmed. Slightly bopped.</span></div>
+    <div class="meta"><span>© 2026 UTUVO・MIT 授權</span><span>台北・用貓掌做的</span><span>沒有 app 受傷。只是被拍了一下。</span></div>
   </div>
 </footer>
 
@@ -361,7 +361,7 @@
       apps=[['📎','Cliply','#7C6BFF,#B7A4FF'],['🍞','Toastr','#FF8A5B,#FFC56B'],['🔍','Zoomly','#3FC3A0,#9FE3C9'],['☁️','Cloudz','#5BA8FF,#A7D4FF'],['🔔','Dingo','#FF6B8B,#FFB3C6'],['🎛️','Knobz','#F5A05A,#FFD39B'],['📼','Tapey','#A78BFA,#F0ABFC']],
       spots=[[8,14],[26,34],[44,10],[62,30],[80,12],[18,58],[70,58]],
       n=0,busy=false,whoosh=null,hit=null;
-  try{whoosh=new Audio('assets/whoosh.wav');hit=new Audio('assets/hit.wav');whoosh.volume=.5;hit.volume=.6}catch(e){}
+  try{whoosh=new Audio('../assets/whoosh.wav');hit=new Audio('../assets/hit.wav');whoosh.volume=.5;hit.volume=.6}catch(e){}
   function play(a){if(!a)return;try{a.currentTime=0;a.play().catch(function(){})}catch(e){}}
   function spawn(){
     targets.innerHTML='';clearEl.classList.remove('show');
@@ -384,15 +384,15 @@
     setTimeout(function(){
       ninja.classList.remove('windup');ninja.classList.add('throwing');ninja.style.setProperty('--lean',(ax*10)+'deg');play(whoosh);
       var sx=nr.left-dr.left+nr.width*0.78,sy=nr.top-dr.top+nr.height*0.18;   // the raised paw of the back view
-      var s=document.createElement('img');s.className='star';s.src='assets/shuriken.webp';s.alt='';s.style.left=(sx-28)+'px';s.style.top=(sy-28)+'px';
+      var s=document.createElement('img');s.className='star';s.src='../assets/shuriken.webp';s.alt='';s.style.left=(sx-28)+'px';s.style.top=(sy-28)+'px';
       s.style.setProperty('--tx',(tr.left+tr.width/2-dr.left-sx)+'px');s.style.setProperty('--ty',(tr.top+tr.height/2-dr.top-sy)+'px');
       dojo.appendChild(s);void s.offsetWidth;s.classList.add('fly');
       setTimeout(function(){
         s.remove();t.classList.add('hit');play(hit);
         for(var i=0;i<8;i++){var sh=document.createElement('span');sh.className='shard';sh.style.background=i%2?'#FFB3C6':'#fff';
           var a=i/8*Math.PI*2;sh.style.setProperty('--x',Math.cos(a)*70+'px');sh.style.setProperty('--y',(Math.sin(a)*70+40)+'px');sh.style.setProperty('--r',(i*97)+'deg');t.appendChild(sh)}
-        var p=document.createElement('span');p.className='pop';p.textContent=['boop!','bop!','nyoom!','swish!'][n%4];t.appendChild(p);
-        n++;score.textContent=n+' bopped';
+        var p=document.createElement('span');p.className='pop';p.textContent=['拍！','啪！','咻！','喵？'][n%4];t.appendChild(p);
+        n++;score.textContent='拍飛 '+n+' 個';
         setTimeout(function(){t.style.visibility='hidden'},700);
         if(targets.querySelectorAll('.target:not(.hit)').length===0){setTimeout(function(){clearEl.classList.add('show')},600);setTimeout(spawn,2600)}
       },360);
@@ -403,7 +403,6 @@
 })();
 
 document.querySelectorAll('.lang a').forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('paw-lang',a.dataset.lang)}catch(e){}})});
-try{if(!localStorage.getItem('paw-lang')&&/^zh/i.test(navigator.language)){location.replace('zh/')}}catch(e){}
 </script>
 
 
