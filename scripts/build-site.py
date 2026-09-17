@@ -42,7 +42,7 @@ ZH = {
  "Fits your lap.": "剛好一個大腿。", "Manageable recoil, instant mouse aiming, and a purr when the job is done.": "後座力可控、滑鼠即時瞄準，做完還會呼嚕。",
  # nine lives
  "Nine lives of <span class=\"b\">love.</span>": "九條命的<span class=\"b\">愛。</span>",
- "Cats have been knocking things off desks since <strong>forever</strong>. We simply gave them a Mac. Here is what the <strong>testing cats</strong> had to say.": "貓從<strong>有史以來</strong>就在把東西推下桌。我們只是給了牠們一台 Mac。以下是<strong>測試貓</strong>的評語。",
+ "Cats have been knocking things off desks since <strong>forever</strong>. We simply gave them a Mac.<br>Here is what the <strong>testing cats</strong> had to say.": "貓從<strong>有史以來</strong>就在把東西推下桌。我們只是給了牠們一台 Mac。<br>以下是<strong>測試貓</strong>的評語。",
  "\"Finally an uninstaller that respects the paw.\"": "「終於有一個尊重貓掌的解除安裝器。」",
  "\"I bopped 23 apps before breakfast. Then I had breakfast. Then I bopped two more.\"": "「早餐前拍飛了 23 個 app。然後吃早餐。然後再拍兩個。」",
  "\"Meow.\"": "「喵。」",
